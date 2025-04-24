@@ -1,19 +1,51 @@
 import styled from '@emotion/styled'
 import { css } from '@emotion/react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 const removeExtension = (fileName: string) => fileName.replace(/\.\w+$/, '')
+const getExtension = (fileName: string) => fileName.replace(/^.*\./, '')
 
-const makeFormHandler = (value: string, setter: (val: string) => void) => ({
-  value,
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => setter(e.target.value),
-})
+const cleanString = (str: string) => str.replace(/[^\w\-_+()[\]:.<>\s]/g, '')
+
+const serializeFileName = ({
+  title,
+  artist,
+  recordLabel,
+}: {
+  title: string
+  artist: string
+  recordLabel: string
+}) => {
+  let newName = `${artist} - ${title}`
+  const cleanRecordLabel = cleanString(recordLabel).trim()
+  if (cleanRecordLabel) {
+    newName += `  [${cleanRecordLabel}]`
+  }
+  const safeNewName = cleanString(newName).replace(/\s{2,}/g, ' ')
+  return safeNewName
+}
 
 export const TrackEditor: React.FC<{ file: File }> = ({ file }) => {
   const [title, setTitle] = useState(() => removeExtension(file.name))
   const [artist, setArtist] = useState('')
   const [recordLabel, setRecordLabel] = useState('')
   const [album, setAlbum] = useState('')
+
+  const cleanTitle = title.trim()
+  const cleanArtist = artist.trim()
+  const cleanRecordLabel = recordLabel.trim()
+  const cleanAlbum = album.trim()
+
+  const newFileName = useMemo(() => {
+    if (!cleanTitle || !cleanArtist) {
+      return null
+    }
+    return serializeFileName({
+      title: cleanTitle,
+      artist: cleanArtist,
+      recordLabel: cleanRecordLabel,
+    })
+  }, [cleanTitle, cleanArtist, cleanRecordLabel])
 
   return (
     <TrackEditorContainer>
@@ -47,6 +79,10 @@ export const TrackEditor: React.FC<{ file: File }> = ({ file }) => {
           />
         </TextFields>
       </Form>
+      <Actions>
+        {newFileName && `${newFileName}.${getExtension(file.name)}`}
+        <Button>Process file</Button>
+      </Actions>
     </TrackEditorContainer>
   )
 }
@@ -86,6 +122,11 @@ const TextFields = styled.div`
   gap: 1rem;
   width: 100%;
 `
+
+const makeFormHandler = (value: string, setter: (val: string) => void) => ({
+  value,
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => setter(e.target.value),
+})
 
 type WithFieldSize = { fieldSize?: 'md' | 'lg' }
 
@@ -141,5 +182,30 @@ const Input = styled.input<WithFieldSize>`
   :focus,
   :focus-visible {
     outline: none;
+  }
+`
+
+const Actions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const Button = styled.button`
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font: inherit;
+  color: var(--color-bg);
+  background: var(--color-brand-green);
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  transition: background-color 50ms;
+
+  :hover,
+  :focus {
+    background: var(--color-brand-green--light);
   }
 `
