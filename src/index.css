@@ -16,24 +16,40 @@
 
 
   --color-brand-green: #8fd919;
+  --color-border: #4c4c4c;
+  --color-border--bright: #505050;
+  --color-bg-interactive: #313131;
+  --color-bg-interactive--active: #3a3a3a;
+  --color-text--muted: #999999;
+
+  --border: 1px solid var(--color-border);
+
+  --font-brand: "Play", sans-serif;
+  --font-normal: "IBM Plex Sans", sans-serif;
+  --font-code: "IBM Plex Mono", monospace;
 }
 
-* {
+*, *:before, *:after {
   box-sizing: border-box;
 }
 
 body {
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-normal), sans-serif;
   font-weight: 400;
   font-style: normal;
 }
 
 code {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-code), monospace;
 }
 
 h1, h2, h3 {
-  font-family: "Play", sans-serif;
+  font-family: var(--font-brand);
   font-weight: bold;
-  color: var(--color-brand-green)
+  margin: 0;
+}
+
+input, textarea, button {
+  font: inherit;
+  color: inherit;
 }
