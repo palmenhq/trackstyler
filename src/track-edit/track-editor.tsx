@@ -1,9 +1,25 @@
 import styled from '@emotion/styled'
 import { css } from '@emotion/react'
 import { useMemo, useState } from 'react'
+import { Format, useTrackConvert } from '../ffmpeg'
+import { FileTuple } from './index'
 
 const removeExtension = (fileName: string) => fileName.replace(/\.\w+$/, '')
 const getExtension = (fileName: string) => fileName.replace(/^.*\./, '')
+const guessFormatFromExtension = (fileName: string): Format => {
+  const extension = getExtension(fileName)
+  switch (extension) {
+    case 'wav':
+      return 'wav'
+    case 'mp3':
+      return 'mp3'
+    case 'aif':
+    case 'aiff':
+      return 'aiff'
+    default:
+      throw new Error(`Unsupported file type "${extension}"`)
+  }
+}
 
 const cleanString = (str: string) => str.replace(/[^\w\-_+()[\]:.<>\s]/g, '')
 
@@ -25,31 +41,57 @@ const serializeFileName = ({
   return safeNewName
 }
 
-export const TrackEditor: React.FC<{ file: File }> = ({ file }) => {
-  const [title, setTitle] = useState(() => removeExtension(file.name))
+const autoDownloadTrack = (downloadName: string, file: Blob) => {
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(file)
+  a.download = downloadName
+  a.style.width = '1px'
+  a.style.height = '1px'
+  a.style.opacity = '0'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
+export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
+  const [title, setTitle] = useState(() => removeExtension(file[1].name))
   const [artist, setArtist] = useState('')
   const [recordLabel, setRecordLabel] = useState('')
   const [album, setAlbum] = useState('')
+  const [format, setFormat] = useState<Format | null>(null)
 
   const cleanTitle = title.trim()
   const cleanArtist = artist.trim()
   const cleanRecordLabel = recordLabel.trim()
   const cleanAlbum = album.trim()
+  const targetFormat = format ?? guessFormatFromExtension(file[1].name)
 
   const newFileName = useMemo(() => {
     if (!cleanTitle || !cleanArtist) {
-      return null
+      return removeExtension(file[1].name)
     }
+
     return serializeFileName({
       title: cleanTitle,
       artist: cleanArtist,
       recordLabel: cleanRecordLabel,
     })
-  }, [cleanTitle, cleanArtist, cleanRecordLabel])
+  }, [cleanTitle, cleanArtist, cleanRecordLabel, file])
+
+  const trackConverter = useTrackConvert({
+    file,
+    format: targetFormat,
+    metadata: {
+      title: cleanTitle,
+      artist: cleanArtist,
+      album: cleanAlbum,
+      publisher: cleanRecordLabel,
+    },
+  })
 
   return (
     <TrackEditorContainer>
-      <Headline>{file.name}</Headline>
+      <Headline>{file[1].name}</Headline>
       <Form>
         <AlbumCover>pic</AlbumCover>
         <TextFields>
@@ -79,9 +121,27 @@ export const TrackEditor: React.FC<{ file: File }> = ({ file }) => {
           />
         </TextFields>
       </Form>
+      <select onChange={(e) => setFormat(e.target.value as Format)}>
+        <option value="aiff">.aiff</option>
+        <option value="wav">.wav</option>
+        <option value="mp3">.mp3</option>
+      </select>
       <Actions>
-        {newFileName && `${newFileName}.${getExtension(file.name)}`}
-        <Button>Process file</Button>
+        {newFileName && `${newFileName}.${format}`}
+        <Button
+          onClick={(e) => {
+            e.preventDefault()
+            trackConverter.convertTrack().then((convertedTrackBlob) => {
+              if (convertedTrackBlob) {
+                autoDownloadTrack(newFileName!, convertedTrackBlob)
+              }
+            })
+          }}
+          disabled={trackConverter.isBusy}
+        >
+          Process file
+          {trackConverter.isBusy && <> (Loading)</>}
+        </Button>
       </Actions>
     </TrackEditorContainer>
   )

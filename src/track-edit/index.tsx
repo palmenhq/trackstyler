@@ -2,7 +2,7 @@ import { Dropzone } from './dropzone'
 import { useCallback, useState } from 'react'
 import { TrackEditor } from './track-editor'
 
-type FileTuple = [string, File]
+export type FileTuple = [string, File]
 const makeFileTuple = (file: File): FileTuple => [crypto.randomUUID(), file]
 
 const useTrackUpload = () => {
@@ -48,8 +48,8 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   return (
     <div>
       <Dropzone onChange={handleFilesAdded} accept=".aif,.aiff,.wav,.mp3" />
-      {currentFiles.map(([id, file]) => (
-        <TrackEditor key={id} file={file} />
+      {currentFiles.map((fileTuple) => (
+        <TrackEditor key={fileTuple[0]} file={fileTuple} />
       ))}
     </div>
   )
