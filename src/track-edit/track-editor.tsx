@@ -3,6 +3,7 @@ import { css } from '@emotion/react'
 import { useMemo, useState } from 'react'
 import { Format, useTrackConvert } from '../ffmpeg'
 import { FileTuple } from './index'
+import { Dropzone, DropzoneText } from './dropzone'
 
 const removeExtension = (fileName: string) => fileName.replace(/\.\w+$/, '')
 const getExtension = (fileName: string) => fileName.replace(/^.*\./, '')
@@ -58,13 +59,23 @@ export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
   const [artist, setArtist] = useState('')
   const [recordLabel, setRecordLabel] = useState('')
   const [album, setAlbum] = useState('')
-  const [format, setFormat] = useState<Format | null>(null)
+  const [albumCover, setAlbumCover] = useState<File | null>(null)
+  const [albumCoverValue, setAlbumCoverValue] = useState<string | undefined>(
+    undefined,
+  )
+  const [format, setFormat] = useState<Format>(() =>
+    guessFormatFromExtension(file[1].name),
+  )
+  const fallbackFormat = useMemo(
+    () => guessFormatFromExtension(file[1].name),
+    [file],
+  )
+  const targetFormat = format ?? fallbackFormat
 
   const cleanTitle = title.trim()
   const cleanArtist = artist.trim()
   const cleanRecordLabel = recordLabel.trim()
   const cleanAlbum = album.trim()
-  const targetFormat = format ?? guessFormatFromExtension(file[1].name)
 
   const newFileName = useMemo(() => {
     if (!cleanTitle || !cleanArtist) {
@@ -80,12 +91,14 @@ export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
 
   const trackConverter = useTrackConvert({
     file,
-    format: targetFormat,
+    targetFormat,
+    sourceFormat: fallbackFormat,
     metadata: {
       title: cleanTitle,
       artist: cleanArtist,
       album: cleanAlbum,
       publisher: cleanRecordLabel,
+      albumCover: albumCover,
     },
   })
 
@@ -93,7 +106,52 @@ export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
     <TrackEditorContainer>
       <Headline>{file[1].name}</Headline>
       <Form>
-        <AlbumCover>pic</AlbumCover>
+        <AlbumCover>
+          <Dropzone
+            containerCss={css`
+              width: 100%;
+              ${!!albumCover &&
+              css`
+                background: url(${URL.createObjectURL(albumCover)});
+                background-position: center center;
+                background-size: cover;
+                background-repeat: no-repeat;
+
+                ::after {
+                  content: ' ';
+                  position: absolute;
+                  width: 100%;
+                  height: 100%;
+                  border-radius: inherit;
+                  background: #ffffff00;
+                  transition: background 50ms;
+                }
+
+                :hover,
+                :focus {
+                  ::after {
+                    background: #ffffff66;
+                  }
+                }
+              `}
+            `}
+            onChange={(e) => {
+              setAlbumCoverValue(e.target.value)
+              setAlbumCover(e.target.files?.[0] ?? null)
+            }}
+            value={albumCoverValue}
+            accept="image/*"
+          >
+            <DropzoneText
+              css={css`
+                text-shadow: 0 0 5px #000000cc;
+                opacity: 0.8;
+              `}
+            >
+              Drop picture
+            </DropzoneText>
+          </Dropzone>
+        </AlbumCover>
         <TextFields>
           <InputGroup
             label="Track Title"
@@ -121,13 +179,16 @@ export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
           />
         </TextFields>
       </Form>
-      <select onChange={(e) => setFormat(e.target.value as Format)}>
+      <select
+        onChange={(e) => setFormat(e.target.value as Format)}
+        value={format}
+      >
         <option value="aiff">.aiff</option>
         <option value="wav">.wav</option>
         <option value="mp3">.mp3</option>
       </select>
       <Actions>
-        {newFileName && `${newFileName}.${format}`}
+        {newFileName && `${newFileName}.${targetFormat}`}
         <Button
           onClick={(e) => {
             e.preventDefault()
@@ -168,11 +229,9 @@ const Form = styled.div`
 `
 
 const AlbumCover = styled.div`
+  display: flex;
   width: 150px;
   height: 150px;
-  background-color: var(--color-bg-interactive);
-  padding: 1rem;
-  border-radius: 0.25rem;
   aspect-ratio: 1 / 1;
 `
 

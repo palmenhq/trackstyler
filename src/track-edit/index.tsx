@@ -1,6 +1,12 @@
-import { Dropzone } from './dropzone'
-import { useCallback, useState } from 'react'
+import {
+  Dropzone,
+  DropzoneText,
+  DropzoneTextSm,
+  DropzoneTextSmMuted,
+} from './dropzone'
+import { useCallback, useMemo, useState } from 'react'
 import { TrackEditor } from './track-editor'
+import { css } from '@emotion/react'
 
 export type FileTuple = [string, File]
 const makeFileTuple = (file: File): FileTuple => [crypto.randomUUID(), file]
@@ -45,10 +51,24 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   handleFilesAdded,
   currentFiles,
 }) => {
+  const recentFiles = useMemo(() => [...currentFiles].reverse(), [currentFiles])
   return (
     <div>
-      <Dropzone onChange={handleFilesAdded} accept=".aif,.aiff,.wav,.mp3" />
-      {currentFiles.map((fileTuple) => (
+      <Dropzone
+        onChange={handleFilesAdded}
+        accept=".aif,.aiff,.wav,.mp3"
+        multiple
+        containerCss={css`
+          padding: 2rem 1rem;
+        `}
+      >
+        <DropzoneText>Drop a track</DropzoneText>
+        <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
+        <DropzoneTextSmMuted>
+          <em>Supported formats: .wav, .aiff, .mp3</em>
+        </DropzoneTextSmMuted>
+      </Dropzone>
+      {recentFiles.map((fileTuple) => (
         <TrackEditor key={fileTuple[0]} file={fileTuple} />
       ))}
     </div>

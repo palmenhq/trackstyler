@@ -1,13 +1,23 @@
-import { css } from '@emotion/react'
 import styled from '@emotion/styled'
 import { useState } from 'react'
 import { fontHeadline, fontNormal } from '../design/style-utils'
+import { css, Interpolation } from '@emotion/react'
 
 export const Dropzone: React.FC<{
   onChange?: React.ChangeEventHandler<HTMLInputElement>
   value?: string | string[]
   accept?: string
-}> = ({ value, onChange, accept }) => {
+  children?: React.ReactNode
+  containerCss?: Interpolation
+  multiple?: boolean
+}> = ({
+  value,
+  onChange,
+  accept,
+  children,
+  containerCss,
+  multiple = false,
+}) => {
   const [dragIsActive, setDragIsActive] = useState(false)
 
   return (
@@ -22,18 +32,16 @@ export const Dropzone: React.FC<{
         setDragIsActive(false)
       }}
       dragIsActive={dragIsActive}
+      css={containerCss}
     >
-      <DropzoneText>Drop a track</DropzoneText>
-      <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
-      <DropzoneTextSmMuted>
-        <em>Supported formats: .wav, .aiff, .mp3</em>
-      </DropzoneTextSmMuted>
+      {children}
+
       <input
         type="file"
         onChange={onChange}
         value={value}
         accept={accept}
-        multiple
+        multiple={multiple}
       />
     </DropzoneContainer>
   )
@@ -47,7 +55,6 @@ const DropzoneContainer = styled.label<{ dragIsActive?: boolean }>`
   position: relative;
 
   border-radius: 4px;
-  padding: 2rem;
   border: var(--border);
   cursor: pointer;
   background-color: var(--color-bg-interactive);
@@ -87,16 +94,16 @@ const DropzoneContainer = styled.label<{ dragIsActive?: boolean }>`
     left: 0.25rem;
   }
 `
-const DropzoneText = styled.span`
+export const DropzoneText = styled.span`
   ${fontHeadline};
   font-size: 1.25rem;
   text-align: center;
 `
-const DropzoneTextSm = styled(DropzoneText)`
+export const DropzoneTextSm = styled(DropzoneText)`
   ${fontNormal};
   font-size: 1rem;
   font-size: 0.75rem;
 `
-const DropzoneTextSmMuted = styled(DropzoneTextSm)`
+export const DropzoneTextSmMuted = styled(DropzoneTextSm)`
   color: var(--color-text--muted);
 `
