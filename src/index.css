@@ -3,6 +3,7 @@
 :root {
   --color-brand-green: #8fd919;
   --color-brand-green--light: #a5dd58;
+  --color-error: #fd4b60;
   --color-text: #fff;
   --color-text--muted: #999999;
   --color-border--bright: #505050;
@@ -39,6 +40,12 @@ body {
   font-family: var(--font-normal), sans-serif;
   font-weight: 400;
   font-style: normal;
+}
+
+body, html {
+  font-size: 16px;
+  padding: 0;
+  margin: 0;
 }
 
 code {

@@ -1,7 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchFile } from '@ffmpeg/util'
-import { FileTuple } from './track-edit'
+import { UploadedFile } from './track-edit'
 
 const ffmpegFileBase = ''
 
@@ -140,7 +140,7 @@ export const useTrackConvert = ({
   sourceFormat,
   metadata,
 }: {
-  file: FileTuple
+  file: UploadedFile
   targetFormat: Format
   sourceFormat: Format
   metadata: TrackMetadataInfo

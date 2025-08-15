@@ -1,28 +1,16 @@
 import styled from '@emotion/styled'
 import { css } from '@emotion/react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Format, useTrackConvert } from '../ffmpeg'
-import { FileTuple } from './index'
-import { Dropzone, DropzoneText } from './dropzone'
-
-const removeExtension = (fileName: string) => fileName.replace(/\.\w+$/, '')
-const getExtension = (fileName: string) => fileName.replace(/^.*\./, '')
-const guessFormatFromExtension = (fileName: string): Format => {
-  const extension = getExtension(fileName)
-  switch (extension) {
-    case 'wav':
-      return 'wav'
-    case 'mp3':
-      return 'mp3'
-    case 'aif':
-    case 'aiff':
-      return 'aiff'
-    default:
-      throw new Error(`Unsupported file type "${extension}"`)
-  }
-}
-
-const cleanString = (str: string) => str.replace(/[^\w\-_+()[\]:.<>\s]/g, '')
+import { UploadedFile } from './index'
+import Chevron from '../icons/chevron.svg?react'
+import {
+  cleanString,
+  guessFormatFromExtension,
+  removeExtension,
+  triggerDownload,
+} from '../util/file-helpers'
+import { AlbumCoverUpload } from './album-cover-upload'
 
 const serializeFileName = ({
   title,
@@ -42,35 +30,20 @@ const serializeFileName = ({
   return safeNewName
 }
 
-const autoDownloadTrack = (downloadName: string, file: Blob) => {
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(file)
-  a.download = downloadName
-  a.style.width = '1px'
-  a.style.height = '1px'
-  a.style.opacity = '0'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-}
-
-export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
+export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
   const [title, setTitle] = useState(() => removeExtension(file[1].name))
   const [artist, setArtist] = useState('')
   const [recordLabel, setRecordLabel] = useState('')
   const [album, setAlbum] = useState('')
   const [albumCover, setAlbumCover] = useState<File | null>(null)
-  const [albumCoverValue, setAlbumCoverValue] = useState<string | undefined>(
-    undefined,
-  )
   const [format, setFormat] = useState<Format>(() =>
     guessFormatFromExtension(file[1].name),
   )
-  const fallbackFormat = useMemo(
+  const sourceFormat = useMemo(
     () => guessFormatFromExtension(file[1].name),
     [file],
   )
-  const targetFormat = format ?? fallbackFormat
+  const targetFormat = format ?? sourceFormat
 
   const cleanTitle = title.trim()
   const cleanArtist = artist.trim()
@@ -92,7 +65,7 @@ export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
   const trackConverter = useTrackConvert({
     file,
     targetFormat,
-    sourceFormat: fallbackFormat,
+    sourceFormat: sourceFormat,
     metadata: {
       title: cleanTitle,
       artist: cleanArtist,
@@ -102,56 +75,22 @@ export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
     },
   })
 
+  const formatId = useId()
+
+  const albumCoverUrl = useMemo(() => {
+    if (albumCover) {
+      return URL.createObjectURL(albumCover)
+    } else {
+      return null
+    }
+  }, [albumCover])
+
   return (
     <TrackEditorContainer>
       <Headline>{file[1].name}</Headline>
       <Form>
-        <AlbumCover>
-          <Dropzone
-            containerCss={css`
-              width: 100%;
-              ${!!albumCover &&
-              css`
-                background: url(${URL.createObjectURL(albumCover)});
-                background-position: center center;
-                background-size: cover;
-                background-repeat: no-repeat;
+        <AlbumCoverUpload value={albumCover} setValue={setAlbumCover} />
 
-                ::after {
-                  content: ' ';
-                  position: absolute;
-                  width: 100%;
-                  height: 100%;
-                  border-radius: inherit;
-                  background: #ffffff00;
-                  transition: background 50ms;
-                }
-
-                :hover,
-                :focus {
-                  ::after {
-                    background: #ffffff66;
-                  }
-                }
-              `}
-            `}
-            onChange={(e) => {
-              setAlbumCoverValue(e.target.value)
-              setAlbumCover(e.target.files?.[0] ?? null)
-            }}
-            value={albumCoverValue}
-            accept="image/*"
-          >
-            <DropzoneText
-              css={css`
-                text-shadow: 0 0 5px #000000cc;
-                opacity: 0.8;
-              `}
-            >
-              Drop picture
-            </DropzoneText>
-          </Dropzone>
-        </AlbumCover>
         <TextFields>
           <InputGroup
             label="Track Title"
@@ -179,28 +118,56 @@ export const TrackEditor: React.FC<{ file: FileTuple }> = ({ file }) => {
           />
         </TextFields>
       </Form>
-      <select
-        onChange={(e) => setFormat(e.target.value as Format)}
-        value={format}
-      >
-        <option value="aiff">.aiff</option>
-        <option value="wav">.wav</option>
-        <option value="mp3">.mp3</option>
-      </select>
       <Actions>
-        {newFileName && `${newFileName}.${targetFormat}`}
+        <div>
+          {newFileName && (
+            <Preview>
+              {albumCoverUrl && (
+                <AlbumCoverPreview
+                  src={albumCoverUrl}
+                  disabled={targetFormat === 'wav'}
+                  title={
+                    targetFormat === 'wav'
+                      ? 'Album art is not supported in .wav files'
+                      : undefined
+                  }
+                />
+              )}
+              <div>
+                {newFileName}
+                <FormatSelectContainer htmlFor={formatId}>
+                  <FormatSelect
+                    onChange={(e) => setFormat(e.target.value as Format)}
+                    value={format}
+                    id={formatId}
+                  >
+                    <option value="aiff">.aiff</option>
+                    <option value="wav">.wav</option>
+                    <option value="mp3">.mp3</option>
+                  </FormatSelect>
+                  <Chevron
+                    css={css`
+                      z-index: -1;
+                    `}
+                  />
+                </FormatSelectContainer>
+              </div>
+            </Preview>
+          )}
+        </div>
         <Button
           onClick={(e) => {
             e.preventDefault()
             trackConverter.convertTrack().then((convertedTrackBlob) => {
               if (convertedTrackBlob) {
-                autoDownloadTrack(newFileName!, convertedTrackBlob)
+                triggerDownload(newFileName!, convertedTrackBlob)
               }
             })
           }}
-          disabled={trackConverter.isBusy}
+          disabled={trackConverter.isBusy || !title || !artist}
         >
-          Process file
+          {targetFormat === sourceFormat && <>Save</>}
+          {targetFormat !== sourceFormat && <>Convert &amp; save</>}
           {trackConverter.isBusy && <> (Loading)</>}
         </Button>
       </Actions>
@@ -226,13 +193,6 @@ const Form = styled.div`
   display: flex;
   gap: 1rem;
   width: 100%;
-`
-
-const AlbumCover = styled.div`
-  display: flex;
-  width: 150px;
-  height: 150px;
-  aspect-ratio: 1 / 1;
 `
 
 const TextFields = styled.div`
@@ -310,6 +270,55 @@ const Actions = styled.div`
   align-items: center;
 `
 
+const Preview = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+`
+
+const AlbumCoverPreview = styled.img<{ disabled?: boolean }>`
+  width: 2rem;
+  height: 2rem;
+  object-fit: cover;
+  object-position: center;
+  aspect-ratio: 1 / 1;
+
+  ${(p) =>
+    p.disabled &&
+    css`
+      opacity: 0.3;
+    `}
+`
+
+const FormatSelectContainer = styled.label`
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  cursor: pointer;
+
+  svg {
+    position: absolute;
+    top: 50%;
+    right: 0.25rem;
+    transform: translateY(-50%);
+    width: 0.75rem;
+    height: 0.75rem;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+`
+
+const FormatSelect = styled.select`
+  appearance: none;
+  padding: 0.25rem 1.5rem 0.25rem 0.25rem;
+  border: 0;
+  font: inherit;
+  background: transparent;
+  color: var(--color-text);
+  flex: 1;
+  cursor: pointer;
+`
+
 const Button = styled.button`
   display: inline-flex;
   justify-content: center;
@@ -326,5 +335,10 @@ const Button = styled.button`
   :hover,
   :focus {
     background: var(--color-brand-green--light);
+  }
+
+  :disabled {
+    cursor: default;
+    background: var(--color-text--muted);
   }
 `
