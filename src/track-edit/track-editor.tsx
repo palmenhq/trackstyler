@@ -24,23 +24,27 @@ const serializeFileName = ({
   let newName = `${artist} - ${title}`
   const cleanRecordLabel = cleanString(recordLabel).trim()
   if (cleanRecordLabel) {
-    newName += `  [${cleanRecordLabel}]`
+    newName += ` [${cleanRecordLabel}]`
   }
   const safeNewName = cleanString(newName).replace(/\s{2,}/g, ' ')
   return safeNewName
 }
 
 export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
-  const [title, setTitle] = useState(() => removeExtension(file[1].name))
-  const [artist, setArtist] = useState('')
-  const [recordLabel, setRecordLabel] = useState('')
-  const [album, setAlbum] = useState('')
-  const [albumCover, setAlbumCover] = useState<File | null>(null)
+  const [title, setTitle] = useState(
+    () => file.metadata?.title ?? removeExtension(file.file.name),
+  )
+  const [artist, setArtist] = useState(file.metadata?.artist ?? '')
+  const [recordLabel, setRecordLabel] = useState(file.metadata?.publisher ?? '')
+  const [album, setAlbum] = useState(file.metadata?.album ?? '')
+  const [albumCover, setAlbumCover] = useState<File | null>(
+    file.metadata?.albumCover ?? null,
+  )
   const [format, setFormat] = useState<Format>(() =>
-    guessFormatFromExtension(file[1].name),
+    guessFormatFromExtension(file.file.name),
   )
   const sourceFormat = useMemo(
-    () => guessFormatFromExtension(file[1].name),
+    () => guessFormatFromExtension(file.file.name),
     [file],
   )
   const targetFormat = format ?? sourceFormat
@@ -52,7 +56,7 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
 
   const newFileName = useMemo(() => {
     if (!cleanTitle || !cleanArtist) {
-      return removeExtension(file[1].name)
+      return removeExtension(file.file.name)
     }
 
     return serializeFileName({
@@ -76,20 +80,24 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
   })
 
   const formatId = useId()
-
   const albumCoverUrl = useMemo(() => {
-    if (albumCover) {
-      return URL.createObjectURL(albumCover)
+    const coverWithDefault = albumCover ?? file.metadata?.albumCover
+    if (coverWithDefault) {
+      return URL.createObjectURL(coverWithDefault)
     } else {
       return null
     }
-  }, [albumCover])
+  }, [albumCover, file.metadata?.albumCover])
 
   return (
     <TrackEditorContainer>
-      <Headline>{file[1].name}</Headline>
+      <Headline>{file.file.name}</Headline>
       <Form>
-        <AlbumCoverUpload value={albumCover} setValue={setAlbumCover} />
+        <AlbumCoverUpload
+          value={albumCover}
+          setValue={setAlbumCover}
+          defaultAlbumCover={file.metadata?.albumCover}
+        />
 
         <TextFields>
           <InputGroup
@@ -135,22 +143,30 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
               )}
               <div>
                 {newFileName}
-                <FormatSelectContainer htmlFor={formatId}>
-                  <FormatSelect
-                    onChange={(e) => setFormat(e.target.value as Format)}
-                    value={format}
-                    id={formatId}
-                  >
-                    <option value="aiff">.aiff</option>
-                    <option value="wav">.wav</option>
-                    <option value="mp3">.mp3</option>
-                  </FormatSelect>
-                  <Chevron
-                    css={css`
-                      z-index: -1;
-                    `}
-                  />
-                </FormatSelectContainer>
+                {sourceFormat === 'mp3' && (
+                  <span title="MP3 is a compressed format and cannot be converted to uncompressed formats">
+                    .mp3
+                  </span>
+                )}
+                {sourceFormat !== 'mp3' && (
+                  <FormatSelectContainer htmlFor={formatId}>
+                    <FormatSelect
+                      onChange={(e) => setFormat(e.target.value as Format)}
+                      value={format}
+                      id={formatId}
+                    >
+                      <option value="aiff">.aiff</option>
+                      <option value="wav">.wav</option>
+                      <option value="flac">.flac</option>
+                      <option value="mp3">.mp3</option>
+                    </FormatSelect>
+                    <Chevron
+                      css={css`
+                        z-index: -1;
+                      `}
+                    />
+                  </FormatSelectContainer>
+                )}
               </div>
             </Preview>
           )}

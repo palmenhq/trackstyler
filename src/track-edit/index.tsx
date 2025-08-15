@@ -9,16 +9,25 @@ import { TrackEditor } from './track-editor'
 import { css } from '@emotion/react'
 import { getExtension, guessFormatFromExtension } from '../util/file-helpers'
 import styled from '@emotion/styled'
+import { TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
 
-export type UploadedFile = [string, File]
-const makeFileTuple = (file: File): UploadedFile => [crypto.randomUUID(), file]
+export type UploadedFile = {
+  id: string
+  file: File
+  metadata?: Partial<TrackMetadataInfo>
+}
+const makeUploadedFile = (file: File): UploadedFile => ({
+  id: crypto.randomUUID(),
+  file,
+})
 
 const useTrackUpload = () => {
   const [currentFiles, setCurrentFiles] = useState<UploadedFile[]>([])
   const [invalidFiles, setInvalidFiles] = useState<File[]>([])
+  const { probeMetadata } = useProbeMetadata()
 
   const addFile = useCallback(
-    (...files: File[]) => {
+    async (...files: File[]) => {
       const validFiles = files.filter((file) => {
         try {
           guessFormatFromExtension(file.name)
@@ -28,10 +37,23 @@ const useTrackUpload = () => {
         }
       })
 
+      const uploadedFiles = await Promise.all(
+        validFiles.map(makeUploadedFile).map(async (file) => {
+          try {
+            return {
+              ...file,
+              metadata: await probeMetadata(file),
+            }
+          } catch {
+            return file
+          }
+        }),
+      )
+
       setInvalidFiles(files.filter((file) => !validFiles.includes(file)))
-      setCurrentFiles([...currentFiles, ...validFiles.map(makeFileTuple)])
+      setCurrentFiles([...uploadedFiles, ...currentFiles])
     },
-    [currentFiles],
+    [currentFiles, probeMetadata],
   )
   const invalidFileFormats = useMemo(
     () => [...new Set(invalidFiles.map((file) => getExtension(file.name)))],
@@ -40,7 +62,7 @@ const useTrackUpload = () => {
 
   const removeFile = useCallback(
     (fileToRemove: File) =>
-      setCurrentFiles(currentFiles.filter(([, file]) => file !== fileToRemove)),
+      setCurrentFiles(currentFiles.filter(({ file }) => file !== fileToRemove)),
     [currentFiles],
   )
   const handleFilesAdded = useCallback<
@@ -73,12 +95,11 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   currentFiles,
   invalidFileFormats,
 }) => {
-  const recentFiles = useMemo(() => [...currentFiles].reverse(), [currentFiles])
   return (
     <div>
       <Dropzone
         onChange={handleFilesAdded}
-        accept=".aif,.aiff,.wav,.mp3"
+        accept=".aif,.aiff,.wav,.mp3,.flac"
         multiple
         containerCss={css`
           padding: 2rem 1rem;
@@ -87,7 +108,7 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
         <DropzoneText>Drop a track</DropzoneText>
         <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
         <DropzoneTextSmMuted>
-          <em>Supported formats: .wav, .aiff, .mp3</em>
+          <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
         </DropzoneTextSmMuted>
       </Dropzone>
 
@@ -101,8 +122,8 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
       )}
 
       <TrackEditors>
-        {recentFiles.map((fileTuple) => (
-          <TrackEditor key={fileTuple[0]} file={fileTuple} />
+        {currentFiles.map((uploadedFile) => (
+          <TrackEditor key={uploadedFile.id} file={uploadedFile} />
         ))}
       </TrackEditors>
     </div>

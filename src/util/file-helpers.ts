@@ -13,6 +13,8 @@ export const guessFormatFromExtension = (fileName: string): Format => {
     case 'aif':
     case 'aiff':
       return 'aiff'
+    case 'flac':
+      return 'flac'
     default:
       throw new Error(`Unsupported file type "${extension}"`)
   }
