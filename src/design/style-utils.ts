@@ -6,3 +6,28 @@ export const fontHeadline = css`
 export const fontNormal = css`
   font-family: var(--font-normal);
 `
+
+export const pushRight = css`
+  margin-right: 1em;
+`
+
+export const pushRightSm = css`
+  margin-right: 0.75em;
+`
+
+export const pushRightXs = css`
+  margin-right: 0.5em;
+`
+
+export const spin = css`
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(260deg);
+    }
+  }
+
+  animation: spin 600ms infinite linear;
+`

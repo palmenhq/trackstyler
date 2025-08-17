@@ -3,7 +3,9 @@ import { css } from '@emotion/react'
 import { useId, useMemo, useState } from 'react'
 import { Format, useTrackConvert } from '../ffmpeg'
 import { UploadedFile } from './index'
-import Chevron from '../icons/chevron.svg?react'
+import ChevronIcon from '../icons/chevron.svg?react'
+import ExportIcon from '../icons/export.svg?react'
+import LoadingIcon from '../icons/loading.svg?react'
 import {
   cleanString,
   guessFormatFromExtension,
@@ -11,6 +13,7 @@ import {
   triggerDownload,
 } from '../util/file-helpers'
 import { AlbumCoverUpload } from './album-cover-upload'
+import { pushRightXs, spin } from '../design/style-utils.ts'
 
 const serializeFileName = ({
   title,
@@ -160,7 +163,7 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
                       <option value="flac">.flac</option>
                       <option value="mp3">.mp3</option>
                     </FormatSelect>
-                    <Chevron
+                    <ChevronIcon
                       css={css`
                         z-index: -1;
                       `}
@@ -182,9 +185,10 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
           }}
           disabled={trackConverter.isBusy || !title || !artist}
         >
+          {!trackConverter.isBusy && <ExportIcon css={pushRightXs} />}
+          {trackConverter.isBusy && <LoadingIcon css={[pushRightXs, spin]} />}
           {targetFormat === sourceFormat && <>Save</>}
           {targetFormat !== sourceFormat && <>Convert &amp; save</>}
-          {trackConverter.isBusy && <> (Loading)</>}
         </Button>
       </Actions>
     </TrackEditorContainer>

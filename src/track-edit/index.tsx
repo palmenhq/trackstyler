@@ -1,15 +1,17 @@
+import styled from '@emotion/styled'
+import { css } from '@emotion/react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   Dropzone,
   DropzoneText,
   DropzoneTextSm,
   DropzoneTextSmMuted,
 } from './dropzone'
-import { useCallback, useMemo, useState } from 'react'
 import { TrackEditor } from './track-editor'
-import { css } from '@emotion/react'
+import ImportIcon from '../icons/import.svg?react'
 import { getExtension, guessFormatFromExtension } from '../util/file-helpers'
-import styled from '@emotion/styled'
 import { TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
+import { pushRightSm } from '../design/style-utils.ts'
 
 export type UploadedFile = {
   id: string
@@ -105,11 +107,18 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
           padding: 2rem 1rem;
         `}
       >
-        <DropzoneText>Drop a track</DropzoneText>
-        <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
-        <DropzoneTextSmMuted>
-          <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
-        </DropzoneTextSmMuted>
+        <DropzoneInstructions>
+          <DropzoneInstructionsLeft>
+            <ImportIcon css={[pushRightSm]} />
+            <DropzoneText>Drop a track</DropzoneText>
+          </DropzoneInstructionsLeft>
+          <DropzoneInstructionsRight>
+            <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
+            <DropzoneTextSmMuted>
+              <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
+            </DropzoneTextSmMuted>
+          </DropzoneInstructionsRight>
+        </DropzoneInstructions>
       </Dropzone>
 
       {invalidFileFormats.length > 1 && (
@@ -134,6 +143,27 @@ export const TrackEdit = () => {
   const uploadProps = useTrackUpload()
   return <TrackEditView {...uploadProps} />
 }
+
+const DropzoneInstructions = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+`
+
+const DropzoneInstructionsLeft = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`
+
+const DropzoneInstructionsRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+`
 
 const ErrorText = styled.div`
   padding-top: 0.5rem;
