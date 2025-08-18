@@ -180,7 +180,10 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
             e.preventDefault()
             trackConverter.convertTrack().then((convertedTrackBlob) => {
               if (convertedTrackBlob) {
-                triggerDownload(newFileName!, convertedTrackBlob)
+                triggerDownload(
+                  `${newFileName}.${targetFormat}`,
+                  convertedTrackBlob,
+                )
               }
             })
           }}
