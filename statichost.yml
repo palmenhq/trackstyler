@@ -1,0 +1,3 @@
+image: guergeiro/pnpm:22-10@sha256:3483200f460f920bf1f047bfcd273a6a54e1e7a82ba7f5c2f59a55f82558aade
+command: pnpm install && pnpm build
+public: dist
