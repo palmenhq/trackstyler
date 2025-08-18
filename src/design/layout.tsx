@@ -12,11 +12,11 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
         </Logo>
 
         <SidebarMenu>
+          <MenuItem href="/" isActive={path === '/'}>
+            About Trackstyler
+          </MenuItem>
           <MenuItem href="/tool/" isActive={path.startsWith('/tool')}>
             Styler tool
-          </MenuItem>
-          <MenuItem href="/about/" isActive={path.startsWith('/about')}>
-            About Trackstyler
           </MenuItem>
         </SidebarMenu>
       </Sidebar>
@@ -28,14 +28,15 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
 const LayoutContainer = styled.div`
   display: grid;
   grid-template-columns: minmax(12rem, 16rem) 1fr;
+  width: 100%;
   min-height: 100vh;
-  max-width: calc(12rem + 75rem);
   gap: 1rem;
 `
 
 const Sidebar = styled.div`
   border-right: 1px solid var(--color-border);
   padding: 1rem;
+  background: var(--color-bg);
 `
 
 const SidebarMenu = styled.div`

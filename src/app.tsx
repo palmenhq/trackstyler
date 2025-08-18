@@ -1,7 +1,8 @@
+import { FC } from 'react'
 import { TrackEdit } from './track-edit'
 import { FfmpegProvider } from './ffmpeg'
 import { Layout } from './design/layout.tsx'
-import { FC } from 'react'
+import { About } from './about'
 
 import './index.css'
 
@@ -9,8 +10,7 @@ export const App: FC<{ path: string }> = ({ path }) => {
   return (
     <FfmpegProvider>
       <Layout>
-        {path === '/' && null}
-        {path.startsWith('/about') && null}
+        {path === '/' && <About />}
         {path.startsWith('/tool') && <TrackEdit />}
       </Layout>
     </FfmpegProvider>

@@ -98,7 +98,7 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   invalidFileFormats,
 }) => {
   return (
-    <div>
+    <TrackEditContainer>
       <h1 css={[pushBottom, pushTopXs]}>Styler tool</h1>
 
       <Dropzone
@@ -137,7 +137,7 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
           <TrackEditor key={uploadedFile.id} file={uploadedFile} />
         ))}
       </TrackEditors>
-    </div>
+    </TrackEditContainer>
   )
 }
 
@@ -145,6 +145,10 @@ export const TrackEdit = () => {
   const uploadProps = useTrackUpload()
   return <TrackEditView {...uploadProps} />
 }
+
+const TrackEditContainer = styled.div`
+  max-width: 75rem;
+`
 
 const DropzoneInstructions = styled.div`
   display: flex;

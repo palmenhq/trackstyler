@@ -59,6 +59,11 @@ h1, h2, h3 {
   margin: 0;
 }
 
+p {
+  margin: 0;
+  margin-bottom: 1rem;
+}
+
 input, textarea, button {
   font: inherit;
   color: inherit;
@@ -76,4 +81,8 @@ a {
 
 a:hover, a:focus {
   color: var(--color-brand-green--light);
+}
+
+img {
+  max-width: 100%;
 }

@@ -14,6 +14,7 @@ import {
 } from '../util/file-helpers'
 import { AlbumCoverUpload } from './album-cover-upload'
 import { pushRightXs, spin } from '../design/style-utils.ts'
+import { Button } from '../design/buttons.tsx'
 
 const serializeFileName = ({
   title,
@@ -337,28 +338,4 @@ const FormatSelect = styled.select`
   color: var(--color-text);
   flex: 1;
   cursor: pointer;
-`
-
-const Button = styled.button`
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  font: inherit;
-  color: var(--color-bg);
-  background: var(--color-brand-green);
-  border: 1px solid transparent;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  padding: 0.75rem 1rem;
-  transition: background-color 50ms;
-
-  :hover,
-  :focus {
-    background: var(--color-brand-green--light);
-  }
-
-  :disabled {
-    cursor: default;
-    background: var(--color-text--muted);
-  }
 `
