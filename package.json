@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && ./bin/create-page-subdirectories.sh",
     "lint": "eslint .",
     "preview": "vite preview",
     "copy-ffmpeg": "./bin/update-ffmpeg-public-files.sh"

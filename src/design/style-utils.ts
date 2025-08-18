@@ -6,6 +6,9 @@ export const fontHeadline = css`
 export const fontNormal = css`
   font-family: var(--font-normal);
 `
+export const pushTopXs = css`
+  margin-right: 0.5em;
+`
 
 export const pushRight = css`
   margin-right: 1em;
@@ -17,6 +20,10 @@ export const pushRightSm = css`
 
 export const pushRightXs = css`
   margin-right: 0.5em;
+`
+
+export const pushBottom = css`
+  margin-bottom: 1em;
 `
 
 export const spin = css`

@@ -11,7 +11,7 @@ import { TrackEditor } from './track-editor'
 import ImportIcon from '../icons/import.svg?react'
 import { getExtension, guessFormatFromExtension } from '../util/file-helpers'
 import { TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
-import { pushRightSm } from '../design/style-utils.ts'
+import { pushBottom, pushRightSm, pushTopXs } from '../design/style-utils.ts'
 
 export type UploadedFile = {
   id: string
@@ -99,6 +99,8 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
 }) => {
   return (
     <div>
+      <h1 css={[pushBottom, pushTopXs]}>Styler tool</h1>
+
       <Dropzone
         onChange={handleFilesAdded}
         accept=".aif,.aiff,.wav,.mp3,.flac"

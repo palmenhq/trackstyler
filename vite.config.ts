@@ -19,4 +19,12 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        'index.html': 'index.html',
+        'tool/index.html': 'index.html',
+      },
+    },
+  },
 })
