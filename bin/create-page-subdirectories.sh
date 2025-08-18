@@ -15,8 +15,5 @@ if [[ ! -d "${target_root_dir}" ]]; then
   exit 1
 fi
 
-mkdir -p "${target_root_dir}/about"
-cp "${source_html}" "${target_root_dir}/about/index.html"
-
 mkdir -p "${target_root_dir}/tool"
 cp "${source_html}" "${target_root_dir}/tool/index.html"
