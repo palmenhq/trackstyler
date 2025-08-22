@@ -69,10 +69,10 @@ export const ffmpegConvertTrack = async ({
         ['-i', originalAlbumCoverFilename],
         [
           '-vf',
-          // Crop to square, then scale to 3000x3000 if it's > 3000:3000 px
-          "crop='min(in_w\\,in_h)':'min(in_w\\,in_h)',scale='if(gt(in_w\\,3000),3000,in_w)':'if(gt(in_h\\,3000),3000,in_h)'",
+          // Crop to square, then scale to 1000x1000 if it's > 1000:1000 px
+          "crop='min(in_w\\,in_h)':'min(in_w\\,in_h)',scale='if(gt(in_w\\,1000),1000,in_w)':'if(gt(in_h\\,1000),1000,in_h)'",
         ],
-        ['-q', '0.9'],
+        ['-q', '0.8'],
         albumCoverFilename,
       ].flat(),
     )
@@ -313,25 +313,36 @@ export const useProbeMetadata = () => {
     ): Promise<Partial<TrackMetadataInfo> | undefined> => {
       if (!ffmpeg?.loaded || !ffmpeg) return
 
-      const probedDataPlainText = await ffProbe(
-        ffmpeg,
-        file,
-        'format_tags=title,artist,album,publisher',
-      )
+      let textMetadata: Record<string, string>
+      try {
+        const probedDataPlainText = await ffProbe(
+          ffmpeg,
+          file,
+          'format_tags=title,artist,album,publisher',
+        )
 
-      if (!probedDataPlainText) return
+        textMetadata = Object.fromEntries(
+          (probedDataPlainText ?? '')
+            .split('\n')
+            .filter(Boolean)
+            .map((row) => {
+              const [artist, ...titleParts] = row
+                .replace(/^TAG:/, '')
+                .split('=')
 
-      const textMetadata = Object.fromEntries(
-        probedDataPlainText
-          .split('\n')
-          .filter(Boolean)
-          .map((row) => {
-            const [artist, ...titleParts] = row.replace(/^TAG:/, '').split('=')
-
-            return [artist, titleParts.join('=')]
-          }),
-      )
-      const albumCover = await probeAlbumCoverFile(ffmpeg, file)
+              return [artist, titleParts.join('=')]
+            }),
+        )
+      } catch (e: unknown) {
+        console.warn('Failed to probe track metadata', e)
+        textMetadata = {}
+      }
+      let albumCover: File | null = null
+      try {
+        albumCover = await probeAlbumCoverFile(ffmpeg, file)
+      } catch (e: unknown) {
+        console.warn('Failed to probe album cover', e)
+      }
 
       return { ...textMetadata, albumCover }
     },

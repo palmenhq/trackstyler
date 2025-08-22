@@ -233,7 +233,7 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
               trackSaveTrackFinished({
                 sourceFormat,
                 targetFormat,
-                saveTime_ms: startSaveTime - Date.now(),
+                saveTime_ms: Date.now() - startSaveTime,
               })
             })
           }}
