@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 import { fetchFile } from '@ffmpeg/util'
-import { UploadedFile } from './track-edit'
+import { UploadedFile } from './tool'
 
 const ffmpegFileBase = ''
 

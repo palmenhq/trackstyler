@@ -1,28 +1,14 @@
 import styled from '@emotion/styled'
 import { css } from '@emotion/react'
 import { ButtonLink } from '../design/buttons.tsx'
+import { MainContainer, MainInnerContainer } from '../design/layout'
 
 export const About = () => {
   return (
     <AboutContainer>
       <Banner>
-        <div
-          css={css`
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-          `}
-        >
-          <div
-            css={css`
-              padding: 1rem;
-              border: 1px solid var(--color-border);
-              background: #9999990c;
-              backdrop-filter: blur(8px);
-              border-radius: 0.25rem;
-            `}
-          >
+        <BannerContentContainer>
+          <BannerContent>
             <h2>First impressions matter</h2>
             <h1
               css={css`
@@ -41,18 +27,13 @@ export const About = () => {
               Make your music stand out. If you share audio files, styling is a
               must.
             </p>
-          </div>
+          </BannerContent>
           <ButtonLink href="/tool">Use Styler tool</ButtonLink>
-        </div>
+        </BannerContentContainer>
         <BannerImage src="/banner.jpg" />
       </Banner>
 
-      <div
-        css={css`
-          max-width: 60rem;
-          padding: 2rem 0;
-        `}
-      >
+      <MainContainer>
         <Section>
           <SectionH3>Make your music stand out</SectionH3>
           <BrandH2>Prep your files for the world</BrandH2>
@@ -98,6 +79,18 @@ export const About = () => {
             leaves your computer - so you’re in full control of its
             distribution.
           </p>
+          <p>
+            How it works? Trackstyler is a UI tool built on top of{' '}
+            <a
+              href="https://github.com/ffmpegwasm/ffmpeg.wasm"
+              target="_blank"
+              rel="noopener"
+            >
+              ffmpeg.wasm
+            </a>{' '}
+            - a browser version of a strongly established, and technically
+            advanced, media management tool.
+          </p>
         </Section>
 
         <Section>
@@ -111,11 +104,17 @@ export const About = () => {
           </p>
 
           <p>
+            It's possible because Trackstyler is not too expensive to run - your
+            machine handles the actual processing, which is what would otherwise
+            would make it too pricey to share completely free.
+          </p>
+
+          <p>
             If you like it - please consider supporting my artistic journey on{' '}
             <a
               href="https://instagram.com/yohan.aif"
               target="_blank"
-              rel="nofollow noreferrer"
+              rel="noopener"
             >
               Instagram
             </a>{' '}
@@ -123,14 +122,14 @@ export const About = () => {
             <a
               href="https://soundcloud.com/yohandotaif"
               target="_blank"
-              rel="nofollow noreferrer"
+              rel="noopener"
             >
               SoundCloud
             </a>
             .
           </p>
         </Section>
-      </div>
+      </MainContainer>
     </AboutContainer>
   )
 }
@@ -141,14 +140,28 @@ const AboutContainer = styled.div`
 const Banner = styled.div`
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   flex-direction: column;
-  width: calc(100% + 4rem);
+  width: 100%;
   min-height: 25rem;
-  margin: -1rem -2em 0;
+  margin: -1rem 0 0 0;
   position: relative;
-  padding: 2rem;
   overflow: hidden;
+`
+
+const BannerContentContainer = styled(MainInnerContainer)`
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+`
+
+const BannerContent = styled.div`
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  background: #9999990c;
+  backdrop-filter: blur(8px);
+  border-radius: 0.25rem;
 `
 
 const BannerImage = styled.img`

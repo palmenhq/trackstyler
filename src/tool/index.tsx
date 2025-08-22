@@ -12,6 +12,7 @@ import ImportIcon from '../icons/import.svg?react'
 import { getExtension, guessFormatFromExtension } from '../util/file-helpers'
 import { TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
 import { pushBottom, pushRightSm, pushTopXs } from '../design/style-utils.ts'
+import { MainContainer } from '../design/layout'
 
 export type UploadedFile = {
   id: string
@@ -98,7 +99,7 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   invalidFileFormats,
 }) => {
   return (
-    <TrackEditContainer>
+    <MainContainer>
       <h1 css={[pushBottom, pushTopXs]}>Styler tool</h1>
 
       <Dropzone
@@ -137,7 +138,7 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
           <TrackEditor key={uploadedFile.id} file={uploadedFile} />
         ))}
       </TrackEditors>
-    </TrackEditContainer>
+    </MainContainer>
   )
 }
 
@@ -145,10 +146,6 @@ export const TrackEdit = () => {
   const uploadProps = useTrackUpload()
   return <TrackEditView {...uploadProps} />
 }
-
-const TrackEditContainer = styled.div`
-  max-width: 75rem;
-`
 
 const DropzoneInstructions = styled.div`
   display: flex;
