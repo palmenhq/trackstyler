@@ -15,8 +15,8 @@ importers:
         specifier: ^11.14.0
         version: 11.14.0(@emotion/react@11.14.0(@types/react@19.1.2)(react@19.1.0))(@types/react@19.1.2)(react@19.1.0)
       '@ffmpeg/core-mt':
-        specifier: ^0.12.9
-        version: 0.12.9
+        specifier: ^0.12.10
+        version: 0.12.10
       '@ffmpeg/ffmpeg':
         specifier: ^0.12.15
         version: 0.12.15
@@ -407,8 +407,8 @@ packages:
     resolution: {integrity: sha512-ZAoA40rNMPwSm+AeHpCq8STiNAwzWLJuP8Xv4CHIc9wv/PSuExjMrmjfYNj682vW0OOiZ1HKxzvjQr9XZIisQA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@ffmpeg/core-mt@0.12.9':
-    resolution: {integrity: sha512-ANw1VxuJGcHVvO3hhc2Bm5qa+jCYdVe69lFhZijeoK2GBQVsQ36H3UUmTk+c5bY0XWeUEwW6EWdxf8fWmIL3wA==}
+  '@ffmpeg/core-mt@0.12.10':
+    resolution: {integrity: sha512-atyRTOpa58bLCIgd6GXBZAXWyWD3AUoQyzxqjvGhp9MuSzdILtOTI62ffLswBsCnLq15lQ8IETHUpm1oe4V9FQ==}
     engines: {node: '>=16.x'}
 
   '@ffmpeg/ffmpeg@0.12.15':
@@ -1720,7 +1720,7 @@ snapshots:
       '@eslint/core': 0.13.0
       levn: 0.4.1
 
-  '@ffmpeg/core-mt@0.12.9': {}
+  '@ffmpeg/core-mt@0.12.10': {}
 
   '@ffmpeg/ffmpeg@0.12.15':
     dependencies:

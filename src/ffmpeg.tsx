@@ -17,6 +17,7 @@ const ffmpegFileBase = ''
 const loadFfmpeg = async () => {
   const ffmpeg = new FFmpeg()
 
+  console.debug('loading ffmpeg')
   if (!ffmpeg.loaded) {
     await ffmpeg.load({
       workerURL: `${ffmpegFileBase}/fmpc.worker.js`,
@@ -346,12 +347,12 @@ const ffmpegContext = createContext<FFmpeg | null>(null)
 
 export const FfmpegProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [ffmpeg, setFfmpeg] = useState<FFmpeg | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const isLoadingStarted = useRef<boolean>(false)
 
   useEffect(() => {
-    if (ffmpeg?.loaded || isLoading) return
+    if (ffmpeg?.loaded || isLoadingStarted.current) return
 
-    setIsLoading(true)
+    isLoadingStarted.current = true
     loadFfmpeg().then((loadedFffmpeg) => {
       console.debug(`ffmpeg loaded`)
       setFfmpeg(loadedFffmpeg)
@@ -362,9 +363,8 @@ export const FfmpegProvider: React.FC<PropsWithChildren> = ({ children }) => {
           console.info('FFMPEG log: ', m.message)
         }
       })
-      setIsLoading(false)
     })
-  }, [ffmpeg?.loaded, isLoading])
+  }, [ffmpeg?.loaded])
 
   return (
     <ffmpegContext.Provider value={ffmpeg}>{children}</ffmpegContext.Provider>
