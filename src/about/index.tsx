@@ -64,16 +64,22 @@ export const About = () => {
           </BrandH2>
           <p>
             Trackstyler lets you add track info, and attaches the metadata -
-            such as album cover and title - to your audio file. Regardless if
-            you share download-enabled private Soundcloud links, on free
-            downloads on Hypeddit, or simply email your audio files, your can
-            finally make your tracks stand out.
+            such as album cover and title - to your audio file.
+          </p>
+          <p>
+            Regardless if you share download-enabled private Soundcloud links,
+            on free downloads on Hypeddit, or simply email your audio files,
+            your can finally make your tracks stand out.
+          </p>
+          <p>
+            Of course, converting between formats (eg .wav to .aiff or .aiff to
+            .mp3) is seamless!
           </p>
         </Section>
 
         <Section>
-          <SectionH3>Your tracks stays with you</SectionH3>
-          <BrandH2>Private by default</BrandH2>
+          <SectionH3>Your tracks stay with you</SectionH3>
+          <BrandH2>Private by design</BrandH2>
           <p>
             When processing your track, it happens on your machine. It never
             leaves your computer - so you’re in full control of its

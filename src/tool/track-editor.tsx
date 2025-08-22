@@ -5,6 +5,7 @@ import { Format, useTrackConvert } from '../ffmpeg'
 import { UploadedFile } from './index'
 import ChevronIcon from '../icons/chevron.svg?react'
 import ExportIcon from '../icons/export.svg?react'
+import InfoIcon from '../icons/info.svg?react'
 import LoadingIcon from '../icons/loading.svg?react'
 import {
   cleanString,
@@ -93,6 +94,40 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
     }
   }, [albumCover, file.metadata?.albumCover])
 
+  const formatInfoHint = useMemo(() => {
+    const errors = []
+    if (sourceFormat === 'mp3') {
+      errors.push(
+        '.mp3 is a lossy compressed format and cannot be converted to uncompressed formats like .wav or .aiff.',
+      )
+    }
+
+    if (
+      sourceFormat === 'flac' &&
+      (targetFormat === 'aiff' || targetFormat === 'wav')
+    ) {
+      errors.push(
+        `When converting .flac to .${targetFormat}, a small performance loss might occur.`,
+      )
+    }
+
+    if (targetFormat === 'flac') {
+      errors.push('Playback support .flac is limited on some devices.')
+    }
+
+    if (targetFormat === 'flac' && albumCover) {
+      errors.push('Album cover might not be shown everywhere.')
+    }
+
+    if (targetFormat === 'wav' && albumCover) {
+      errors.push(
+        '.wav does not support embedded album covers. Choose .aiff to include the album cover.',
+      )
+    }
+
+    return errors
+  }, [albumCover, sourceFormat, targetFormat])
+
   return (
     <TrackEditorContainer>
       <Headline>{file.file.name}</Headline>
@@ -131,27 +166,18 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
         </TextFields>
       </Form>
       <Actions>
-        <div>
+        <PreviewContainer>
           {newFileName && (
             <Preview>
               {albumCoverUrl && (
                 <AlbumCoverPreview
                   src={albumCoverUrl}
                   disabled={targetFormat === 'wav'}
-                  title={
-                    targetFormat === 'wav'
-                      ? 'Album art is not supported in .wav files'
-                      : undefined
-                  }
                 />
               )}
               <div>
                 {newFileName}
-                {sourceFormat === 'mp3' && (
-                  <span title="MP3 is a compressed format and cannot be converted to uncompressed formats">
-                    .mp3
-                  </span>
-                )}
+                {sourceFormat === 'mp3' && <>.mp3</>}
                 {sourceFormat !== 'mp3' && (
                   <FormatSelectContainer htmlFor={formatId}>
                     <FormatSelect
@@ -174,7 +200,13 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
               </div>
             </Preview>
           )}
-        </div>
+          {formatInfoHint.length > 0 && (
+            <FormatInfoBubble>
+              <InfoIcon />
+              <div>{formatInfoHint.join(' ')}</div>
+            </FormatInfoBubble>
+          )}
+        </PreviewContainer>
         <Button
           onClick={(e) => {
             e.preventDefault()
@@ -294,6 +326,12 @@ const Actions = styled.div`
   align-items: center;
 `
 
+const PreviewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`
+
 const Preview = styled.div`
   display: flex;
   gap: 0.5rem;
@@ -341,4 +379,20 @@ const FormatSelect = styled.select`
   color: var(--color-text);
   flex: 1;
   cursor: pointer;
+`
+
+const FormatInfoBubble = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  max-width: 21rem;
+
+  svg {
+    margin-top: 0.2rem;
+    fill: var(--color-info);
+    flex-shrink: 0;
+  }
 `

@@ -25,9 +25,28 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
         </HeaderContent>
       </Header>
       <MainSlot>{children}</MainSlot>
+      <LicenceContainer>
+        <Licence>
+          <p>&copy; Yohan.Aif / Palmenhq AB {currentYear}</p>
+          <p>
+            Trackstyler is provided for free, as-is, without warranties of any
+            kind, under the{' '}
+            <a
+              href="https://en.wikipedia.org/wiki/MIT_License"
+              target="_blank"
+              rel="noopener"
+            >
+              MIT license
+            </a>
+            .
+          </p>
+        </Licence>
+      </LicenceContainer>
     </LayoutContainer>
   )
 }
+
+const currentYear = new Date().getFullYear()
 
 const maxWidth = css`
   width: 100%;
@@ -137,5 +156,24 @@ const Logo = styled.a`
   span {
     font-family: var(--font-normal);
     font-weight: 300;
+  }
+`
+
+const LicenceContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+`
+const Licence = styled.div`
+  width: 100%;
+  max-width: 40rem;
+  padding: 1rem;
+  font-size: 0.75rem;
+  color: var(--color-text--muted);
+  text-align: center;
+
+  a {
+    color: var(--color-text--muted);
   }
 `
