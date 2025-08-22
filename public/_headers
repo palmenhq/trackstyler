@@ -2,3 +2,9 @@
     Cross-Origin-Opener-Policy: same-origin
     Cross-Origin-Resource-Policy: same-origin
     Cross-Origin-Embedder-Policy: require-corp
+
+/
+    Link: <https://www.trackstyler.com>; rel="canonical"
+
+/tool/
+    Link: <https://www.trackstyler.com/tool/>; rel="canonical"
