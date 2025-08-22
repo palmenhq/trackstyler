@@ -26,13 +26,9 @@ export const AlbumCoverUpload = ({
       <Dropzone
         containerCss={css`
           width: 100%;
-          ${!!albumCoverUrl &&
-          css`
-            background: url(${albumCoverUrl});
-            background-position: center center;
-            background-size: cover;
-            background-repeat: no-repeat;
-          `};
+          background-position: center center;
+          background-size: cover;
+          background-repeat: no-repeat;
 
           ::after {
             content: ' ';
@@ -52,6 +48,13 @@ export const AlbumCoverUpload = ({
             }
           }
         `}
+        containerStyle={
+          albumCoverUrl
+            ? {
+                backgroundImage: `url(${albumCoverUrl})`,
+              }
+            : undefined
+        }
         onChange={(e) => {
           setAlbumCoverValue(e.target.value)
           setValue?.(e.target.files?.[0] ?? null)

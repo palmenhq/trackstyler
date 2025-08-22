@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { fontHeadline, fontNormal } from '../design/style-utils'
 import { css, Interpolation } from '@emotion/react'
 
@@ -9,6 +9,7 @@ export const Dropzone: React.FC<{
   accept?: string
   children?: React.ReactNode
   containerCss?: Interpolation
+  containerStyle?: CSSProperties
   multiple?: boolean
 }> = ({
   value,
@@ -16,10 +17,10 @@ export const Dropzone: React.FC<{
   accept,
   children,
   containerCss,
+  containerStyle,
   multiple = false,
 }) => {
   const [dragIsActive, setDragIsActive] = useState(false)
-
   return (
     <DropzoneContainer
       onDragOver={() => {
@@ -33,6 +34,7 @@ export const Dropzone: React.FC<{
       }}
       dragIsActive={dragIsActive}
       css={containerCss}
+      style={containerStyle}
     >
       {children}
 
@@ -79,6 +81,7 @@ const DropzoneContainer = styled.label<{ dragIsActive?: boolean }>`
     height: 100%;
     cursor: pointer;
     opacity: 0;
+    z-index: 999;
   }
 
   ::before {
@@ -98,6 +101,7 @@ export const DropzoneText = styled.span`
   ${fontHeadline};
   font-size: 1.25rem;
   text-align: center;
+  z-index: 1;
 `
 export const DropzoneTextSm = styled(DropzoneText)`
   ${fontNormal};
