@@ -16,6 +16,7 @@ import {
 import { AlbumCoverUpload } from './album-cover-upload'
 import { pushRightXs, spin } from '../design/style-utils.ts'
 import { Button } from '../design/buttons.tsx'
+import { trackSavedTrack } from '../util/tracker'
 
 const serializeFileName = ({
   title,
@@ -210,6 +211,7 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
         <Button
           onClick={(e) => {
             e.preventDefault()
+            const startSaveTime = Date.now()
             trackConverter.convertTrack().then((convertedTrackBlob) => {
               if (convertedTrackBlob) {
                 triggerDownload(
@@ -217,6 +219,17 @@ export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
                   convertedTrackBlob,
                 )
               }
+
+              trackSavedTrack({
+                targetFormat,
+                sourceFormat,
+                saveTime_ms: startSaveTime - Date.now(),
+                filledTitle: !!title,
+                filledAlbum: !!album,
+                filledArtist: !!album,
+                filledAlbumCover: !!albumCover,
+                filledRecordLabel: !!recordLabel,
+              })
             })
           }}
           disabled={trackConverter.isBusy || !title || !artist}

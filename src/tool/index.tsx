@@ -13,6 +13,7 @@ import { getExtension, guessFormatFromExtension } from '../util/file-helpers'
 import { TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
 import { pushBottom, pushRightSm, pushTopXs } from '../design/style-utils.ts'
 import { MainContainer } from '../design/layout'
+import { trackLoadedTrack, trackProbedTrack } from '../util/tracker'
 
 export type UploadedFile = {
   id: string
@@ -43,9 +44,22 @@ const useTrackUpload = () => {
       const uploadedFiles = await Promise.all(
         validFiles.map(makeUploadedFile).map(async (file) => {
           try {
+            trackLoadedTrack({
+              sourceFormat: guessFormatFromExtension(file.file.name),
+            })
+
+            const metadata = await probeMetadata(file)
+            trackProbedTrack({
+              title: !!metadata?.title,
+              artist: !!metadata?.artist,
+              album: !!metadata?.album,
+              albumCover: !!metadata?.albumCover,
+              recordLabel: !!metadata?.label,
+            })
+
             return {
               ...file,
-              metadata: await probeMetadata(file),
+              metadata,
             }
           } catch {
             return file
