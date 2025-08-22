@@ -17,7 +17,15 @@ export const trackProbedTrack = (props: {
   plausible.trackEvent('track_probed', { props })
 }
 
-export const trackSavedTrack = (props: {
+export const trackSaveTrackFinished = (props: {
+  sourceFormat: string
+  targetFormat: string
+  saveTime_ms: number
+}) => {
+  plausible.trackEvent('track_save_finished', { props })
+}
+
+export const trackSaveTrackStarted = (props: {
   sourceFormat: string
   targetFormat: string
   filledTitle: boolean
@@ -25,7 +33,6 @@ export const trackSavedTrack = (props: {
   filledAlbum: boolean
   filledAlbumCover: boolean
   filledRecordLabel: boolean
-  saveTime_ms: number
 }) => {
-  plausible.trackEvent('track_saved', { props })
+  plausible.trackEvent('track_save_started', { props })
 }
