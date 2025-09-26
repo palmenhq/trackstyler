@@ -154,12 +154,12 @@ export type TrackMetadataInfo = {
 }
 
 export const useTrackConvert = ({
-  file,
+  uploadedFile,
   targetFormat,
   sourceFormat,
   metadata,
 }: {
-  file: UploadedFile
+  uploadedFile: UploadedFile
   targetFormat: Format
   sourceFormat: Format
   metadata: TrackMetadataInfo
@@ -168,7 +168,7 @@ export const useTrackConvert = ({
   const [preparedTrack, setPreparedTrack] = useState<string | null>(null)
   const [conversionInProgress, setConversionInProgress] = useState(false)
   const loadingRef = useRef<string | null>(null)
-  const ffmpegPath = `${file.id}__input.${sourceFormat}`
+  const ffmpegPath = `${uploadedFile.id}__input.${sourceFormat}`
 
   useEffect(() => {
     if (!ffmpeg?.loaded) return
@@ -176,48 +176,48 @@ export const useTrackConvert = ({
     console.debug(
       'loading track status',
       preparedTrack,
-      file.id,
+      uploadedFile.id,
       loadingRef.current,
     )
-    if (!!preparedTrack && file.id === preparedTrack) {
+    if (!!preparedTrack && uploadedFile.id === preparedTrack) {
       return
     }
 
     if (loadingRef.current) {
       return
     } else {
-      loadingRef.current = file.id
+      loadingRef.current = uploadedFile.id
     }
 
     Promise.resolve()
       .then(() => {
-        console.debug(`ffmpeg loading file`, file.file)
-        return fetchFile(file.file)
+        console.debug(`ffmpeg loading file`, uploadedFile.file)
+        return fetchFile(uploadedFile.file)
       })
       .then((fetchedFile) => {
         console.debug('file fetched, writing to vfs', ffmpegPath)
         return ffmpeg.writeFile(ffmpegPath, fetchedFile)
       })
-      .then(() => setPreparedTrack(file.id))
+      .then(() => setPreparedTrack(uploadedFile.id))
       .catch((e) => {
         console.error('Error loading track', e)
       })
       .finally(() => {
-        console.debug(`ffmpeg loaded file`, file.file)
+        console.debug(`ffmpeg loaded file`, uploadedFile.file)
         loadingRef.current = null
       })
-  }, [ffmpeg, ffmpegPath, file, preparedTrack])
+  }, [ffmpeg, ffmpegPath, uploadedFile, preparedTrack])
 
   // Reset preparedTrack
   useEffect(() => {
-    if (preparedTrack !== null && preparedTrack !== file.id) {
+    if (preparedTrack !== null && preparedTrack !== uploadedFile.id) {
       setPreparedTrack(null)
       return
     }
-  }, [preparedTrack, file])
+  }, [preparedTrack, uploadedFile])
 
   const convertTrack = useCallback(async () => {
-    if (!preparedTrack || !ffmpeg) return
+    if (!preparedTrack || !ffmpeg?.loaded) return
 
     setConversionInProgress(true)
     return ffmpegConvertTrack({
@@ -226,15 +226,22 @@ export const useTrackConvert = ({
       metadata,
       fileName: ffmpegPath,
     }).finally(() => setConversionInProgress(false))
-  }, [ffmpeg?.loaded, ffmpegPath, targetFormat, metadata, preparedTrack])
+  }, [
+    preparedTrack,
+    ffmpeg,
+    ffmpeg?.loaded,
+    targetFormat,
+    metadata,
+    ffmpegPath,
+  ])
 
   const actions = useMemo(
     () => ({
-      isReady: preparedTrack === file.id,
+      isReady: preparedTrack === uploadedFile.id,
       isBusy: conversionInProgress || !!loadingRef.current,
       convertTrack,
     }),
-    [conversionInProgress, convertTrack, file.id, preparedTrack],
+    [conversionInProgress, convertTrack, uploadedFile.id, preparedTrack],
   )
 
   return actions

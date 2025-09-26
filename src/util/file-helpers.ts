@@ -21,7 +21,7 @@ export const guessFormatFromExtension = (fileName: string): Format => {
 }
 
 export const cleanString = (str: string) =>
-  str.replace(/[^\w\-_+()[\]:.<>\s]/g, '')
+  str.replace(/[^\w\-_+()[\]:,.<>\s]/g, '')
 
 export const triggerDownload = (downloadName: string, file: Blob) => {
   const a = document.createElement('a')

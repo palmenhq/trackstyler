@@ -14,6 +14,15 @@ import { TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
 import { pushBottom, pushRightSm, pushTopXs } from '../design/style-utils.ts'
 import { MainContainer } from '../design/layout'
 import { trackLoadedTrack, trackProbedTrack } from '../util/tracker'
+import { Selector, SelectorOption } from '../design/selector.tsx'
+import {
+  EditMode,
+  isMultiMode,
+  isSingleMode,
+  WithEditMode,
+} from './edit-mode.ts'
+import { useAtom } from 'jotai'
+import { trackUploadsAtom } from './state.ts'
 
 export type UploadedFile = {
   id: string
@@ -26,7 +35,7 @@ const makeUploadedFile = (file: File): UploadedFile => ({
 })
 
 const useTrackUpload = () => {
-  const [currentFiles, setCurrentFiles] = useState<UploadedFile[]>([])
+  const [currentFiles, setCurrentFiles] = useAtom(trackUploadsAtom)
   const [invalidFiles, setInvalidFiles] = useState<File[]>([])
   const { probeMetadata } = useProbeMetadata()
 
@@ -68,9 +77,12 @@ const useTrackUpload = () => {
       )
 
       setInvalidFiles(files.filter((file) => !validFiles.includes(file)))
-      setCurrentFiles([...uploadedFiles, ...currentFiles])
+      setCurrentFiles([
+        ...uploadedFiles.map((uploadedFile) => ({ uploadedFile })),
+        ...currentFiles,
+      ])
     },
-    [currentFiles, probeMetadata],
+    [currentFiles, probeMetadata, setCurrentFiles],
   )
   const invalidFileFormats = useMemo(
     () => [...new Set(invalidFiles.map((file) => getExtension(file.name)))],
@@ -79,8 +91,12 @@ const useTrackUpload = () => {
 
   const removeFile = useCallback(
     (fileToRemove: File) =>
-      setCurrentFiles(currentFiles.filter(({ file }) => file !== fileToRemove)),
-    [currentFiles],
+      setCurrentFiles(
+        currentFiles.filter(
+          ({ uploadedFile }) => uploadedFile.file !== fileToRemove,
+        ),
+      ),
+    [currentFiles, setCurrentFiles],
   )
   const handleFilesAdded = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
@@ -112,6 +128,8 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   currentFiles,
   invalidFileFormats,
 }) => {
+  const [editMode, setEditMode] = useState<EditMode>('single')
+
   return (
     <MainContainer>
       <h1 css={[pushBottom, pushTopXs]}>Styler tool</h1>
@@ -147,9 +165,56 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
         <ErrorText>File format {invalidFileFormats[0]} not supported</ErrorText>
       )}
 
-      <TrackEditors>
-        {currentFiles.map((uploadedFile) => (
-          <TrackEditor key={uploadedFile.id} file={uploadedFile} />
+      <div
+        css={css`
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          width: 100%;
+          padding: 1rem 0;
+        `}
+      >
+        <div
+          css={css`
+            font-family: var(--font-brand), sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding-bottom: 0.25rem;
+          `}
+        >
+          Edit mode
+        </div>
+        <Selector formName="edit-mode">
+          <SelectorOption
+            checked={editMode === 'multi'}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setEditMode('multi')
+              }
+            }}
+          >
+            Multi
+          </SelectorOption>
+          <SelectorOption
+            checked={editMode === 'single'}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setEditMode('single')
+              }
+            }}
+          >
+            Single
+          </SelectorOption>
+        </Selector>
+      </div>
+
+      <TrackEditors editMode={editMode}>
+        {currentFiles.map((fileSAndState) => (
+          <TrackEditor
+            key={fileSAndState.uploadedFile.id}
+            fileAndState={fileSAndState}
+            editMode={editMode}
+          />
         ))}
       </TrackEditors>
     </MainContainer>
@@ -187,9 +252,18 @@ const ErrorText = styled.div`
   color: var(--color-error);
 `
 
-const TrackEditors = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  padding-top: 2rem;
+const TrackEditors = styled.div<WithEditMode>`
+  ${(p) =>
+    isSingleMode(p) &&
+    css`
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      padding-top: 2rem;
+    `}
+  ${(p) =>
+    isMultiMode(p) &&
+    css`
+      display: table;
+    `}
 `

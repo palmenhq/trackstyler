@@ -26,6 +26,9 @@ importers:
       '@ffmpeg/util':
         specifier: ^0.12.2
         version: 0.12.2
+      jotai:
+        specifier: ^2.14.0
+        version: 2.14.0(@babel/core@7.26.10)(@babel/template@7.27.0)(@types/react@19.1.2)(react@19.1.0)
       plausible-tracker:
         specifier: ^0.3.9
         version: 0.3.9
@@ -1053,6 +1056,24 @@ packages:
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
+
+  jotai@2.14.0:
+    resolution: {integrity: sha512-JQkNkTnqjk1BlSUjHfXi+pGG/573bVN104gp6CymhrWDseZGDReTNniWrLhJ+zXbM6pH+82+UNJ2vwYQUkQMWQ==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@babel/core': '>=7.0.0'
+      '@babel/template': '>=7.0.0'
+      '@types/react': '>=17.0.0'
+      react: '>=17.0.0'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      '@babel/template':
+        optional: true
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -2371,6 +2392,13 @@ snapshots:
   is-number@7.0.0: {}
 
   isexe@2.0.0: {}
+
+  jotai@2.14.0(@babel/core@7.26.10)(@babel/template@7.27.0)(@types/react@19.1.2)(react@19.1.0):
+    optionalDependencies:
+      '@babel/core': 7.26.10
+      '@babel/template': 7.27.0
+      '@types/react': 19.1.2
+      react: 19.1.0
 
   js-tokens@4.0.0: {}
 

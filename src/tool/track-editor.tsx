@@ -1,416 +1,68 @@
-import styled from '@emotion/styled'
-import { css } from '@emotion/react'
-import { useId, useMemo, useState } from 'react'
-import { Format, useTrackConvert } from '../ffmpeg'
-import { UploadedFile } from './index'
-import ChevronIcon from '../icons/chevron.svg?react'
-import ExportIcon from '../icons/export.svg?react'
-import InfoIcon from '../icons/info.svg?react'
-import LoadingIcon from '../icons/loading.svg?react'
-import {
-  cleanString,
-  guessFormatFromExtension,
-  removeExtension,
-  triggerDownload,
-} from '../util/file-helpers'
-import { AlbumCoverUpload } from './album-cover-upload'
-import { pushRightXs, spin } from '../design/style-utils.ts'
-import { Button } from '../design/buttons.tsx'
+import { useTrackConvert } from '../ffmpeg'
+import { triggerDownload } from '../util/file-helpers'
 import { trackSaveTrackFinished, trackSaveTrackStarted } from '../util/tracker'
+import { isSingleMode, WithEditMode } from './edit-mode.ts'
+import { FileAndState, useTrackEditorState } from './state.ts'
+import { SingleTrackEditor } from './single-track-editor.tsx'
 
-const serializeFileName = ({
-  title,
-  artist,
-  recordLabel,
-}: {
-  title: string
-  artist: string
-  recordLabel: string
-}) => {
-  let newName = `${artist} - ${title}`
-  const cleanRecordLabel = cleanString(recordLabel).trim()
-  if (cleanRecordLabel) {
-    newName += ` [${cleanRecordLabel}]`
+export const TrackEditor: React.FC<
+  WithEditMode & {
+    fileAndState: FileAndState
   }
-  const safeNewName = cleanString(newName).replace(/\s{2,}/g, ' ')
-  return safeNewName
-}
-
-export const TrackEditor: React.FC<{ file: UploadedFile }> = ({ file }) => {
-  const [title, setTitle] = useState(
-    () => file.metadata?.title ?? removeExtension(file.file.name),
-  )
-  const [artist, setArtist] = useState(file.metadata?.artist ?? '')
-  const [recordLabel, setRecordLabel] = useState(file.metadata?.publisher ?? '')
-  const [album, setAlbum] = useState(file.metadata?.album ?? '')
-  const [albumCover, setAlbumCover] = useState<File | null>(
-    file.metadata?.albumCover ?? null,
-  )
-  const [format, setFormat] = useState<Format>(() =>
-    guessFormatFromExtension(file.file.name),
-  )
-  const sourceFormat = useMemo(
-    () => guessFormatFromExtension(file.file.name),
-    [file],
-  )
-  const targetFormat = format ?? sourceFormat
-
-  const cleanTitle = title.trim()
-  const cleanArtist = artist.trim()
-  const cleanRecordLabel = recordLabel.trim()
-  const cleanAlbum = album.trim()
-
-  const newFileName = useMemo(() => {
-    if (!cleanTitle || !cleanArtist) {
-      return removeExtension(file.file.name)
-    }
-
-    return serializeFileName({
-      title: cleanTitle,
-      artist: cleanArtist,
-      recordLabel: cleanRecordLabel,
-    })
-  }, [cleanTitle, cleanArtist, cleanRecordLabel, file])
+> = ({ fileAndState, editMode }) => {
+  const [trackEditorState, setTrackEditorState] =
+    useTrackEditorState(fileAndState)
 
   const trackConverter = useTrackConvert({
-    file,
-    targetFormat,
-    sourceFormat: sourceFormat,
+    uploadedFile: fileAndState.uploadedFile,
+    targetFormat: trackEditorState.targetFormat,
+    sourceFormat: trackEditorState.sourceFormat,
     metadata: {
-      title: cleanTitle,
-      artist: cleanArtist,
-      album: cleanAlbum,
-      publisher: cleanRecordLabel,
-      albumCover: albumCover,
+      title: trackEditorState.cleanTitle,
+      artist: trackEditorState.cleanArtist,
+      album: trackEditorState.cleanAlbum,
+      publisher: trackEditorState.cleanRecordLabel,
+      albumCover: trackEditorState.albumCover,
     },
   })
 
-  const formatId = useId()
-  const albumCoverUrl = useMemo(() => {
-    const coverWithDefault = albumCover ?? file.metadata?.albumCover
-    if (coverWithDefault) {
-      return URL.createObjectURL(coverWithDefault)
-    } else {
-      return null
-    }
-  }, [albumCover, file.metadata?.albumCover])
-
-  const formatInfoHint = useMemo(() => {
-    const errors = []
-    if (sourceFormat === 'mp3') {
-      errors.push(
-        '.mp3 is a lossy compressed format and cannot be converted to uncompressed formats like .wav or .aiff.',
-      )
-    }
-
-    if (
-      sourceFormat === 'flac' &&
-      (targetFormat === 'aiff' || targetFormat === 'wav')
-    ) {
-      errors.push(
-        `When converting .flac to .${targetFormat}, a small performance loss might occur.`,
-      )
-    }
-
-    if (targetFormat === 'flac') {
-      errors.push('Playback support .flac is limited on some devices.')
-    }
-
-    if (targetFormat === 'flac' && albumCover) {
-      errors.push('Album cover might not be shown everywhere.')
-    }
-
-    if (targetFormat === 'wav' && albumCover) {
-      errors.push(
-        '.wav does not support embedded album covers. Choose .aiff to include the album cover.',
-      )
-    }
-
-    return errors
-  }, [albumCover, sourceFormat, targetFormat])
-
   return (
-    <TrackEditorContainer>
-      <Headline>{file.file.name}</Headline>
-      <Form>
-        <AlbumCoverUpload
-          value={albumCover}
-          setValue={setAlbumCover}
-          defaultAlbumCover={file.metadata?.albumCover}
-        />
-
-        <TextFields>
-          <InputGroup
-            label="Track Title"
-            placeholder="My Track (Original Mix)"
-            required
-            fieldSize="lg"
-            style={{ marginBottom: '0.5rem' }}
-            {...makeFormHandler(title, setTitle)}
-          />
-          <InputGroup
-            label="Artist"
-            placeholder="Artsy"
-            required
-            {...makeFormHandler(artist, setArtist)}
-          />
-          <InputGroup
-            label="Record Label"
-            placeholder="Awesome Records"
-            {...makeFormHandler(recordLabel, setRecordLabel)}
-          />
-          <InputGroup
-            label="Album"
-            placeholder="AR007"
-            {...makeFormHandler(album, setAlbum)}
-          />
-        </TextFields>
-      </Form>
-      <Actions>
-        <PreviewContainer>
-          {newFileName && (
-            <Preview>
-              {albumCoverUrl && (
-                <AlbumCoverPreview
-                  src={albumCoverUrl}
-                  disabled={targetFormat === 'wav'}
-                />
-              )}
-              <div>
-                {newFileName}
-                {sourceFormat === 'mp3' && <>.mp3</>}
-                {sourceFormat !== 'mp3' && (
-                  <FormatSelectContainer htmlFor={formatId}>
-                    <FormatSelect
-                      onChange={(e) => setFormat(e.target.value as Format)}
-                      value={format}
-                      id={formatId}
-                    >
-                      <option value="aiff">.aiff</option>
-                      <option value="wav">.wav</option>
-                      <option value="flac">.flac</option>
-                      <option value="mp3">.mp3</option>
-                    </FormatSelect>
-                    <ChevronIcon
-                      css={css`
-                        z-index: -1;
-                      `}
-                    />
-                  </FormatSelectContainer>
-                )}
-              </div>
-            </Preview>
-          )}
-          {formatInfoHint.length > 0 && (
-            <FormatInfoBubble>
-              <InfoIcon />
-              <div>{formatInfoHint.join(' ')}</div>
-            </FormatInfoBubble>
-          )}
-        </PreviewContainer>
-        <Button
-          onClick={(e) => {
-            e.preventDefault()
+    <>
+      {isSingleMode(editMode) && (
+        <SingleTrackEditor
+          trackState={trackEditorState}
+          setTrackState={setTrackEditorState}
+          uploadedFile={fileAndState.uploadedFile}
+          onDownload={() => {
             trackSaveTrackStarted({
-              targetFormat,
-              sourceFormat,
-              filledTitle: !!title,
-              filledAlbum: !!album,
-              filledArtist: !!album,
-              filledAlbumCover: !!albumCover,
-              filledRecordLabel: !!recordLabel,
+              targetFormat: trackEditorState.targetFormat,
+              sourceFormat: trackEditorState.sourceFormat,
+              filledTitle: !!trackEditorState.cleanTitle,
+              filledAlbum: !!trackEditorState.cleanAlbum,
+              filledArtist: !!trackEditorState.cleanArtist,
+              filledAlbumCover: !!trackEditorState.albumCoverUrl,
+              filledRecordLabel: !!trackEditorState.cleanRecordLabel,
             })
             const startSaveTime = Date.now()
 
             trackConverter.convertTrack().then((convertedTrackBlob) => {
               if (convertedTrackBlob) {
                 triggerDownload(
-                  `${newFileName}.${targetFormat}`,
+                  `${trackEditorState.newFileName}.${trackEditorState.targetFormat}`,
                   convertedTrackBlob,
                 )
               }
 
               trackSaveTrackFinished({
-                sourceFormat,
-                targetFormat,
+                sourceFormat: trackEditorState.sourceFormat,
+                targetFormat: trackEditorState.targetFormat,
                 saveTime_ms: Date.now() - startSaveTime,
               })
             })
           }}
-          disabled={trackConverter.isBusy || !title || !artist}
-        >
-          {!trackConverter.isBusy && <ExportIcon css={pushRightXs} />}
-          {trackConverter.isBusy && <LoadingIcon css={[pushRightXs, spin]} />}
-          {targetFormat === sourceFormat && <>Save</>}
-          {targetFormat !== sourceFormat && <>Convert &amp; save</>}
-        </Button>
-      </Actions>
-    </TrackEditorContainer>
+          trackConverter={trackConverter}
+        />
+      )}
+    </>
   )
 }
-
-const TrackEditorContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  border: var(--border);
-  border-radius: 0.25rem;
-  padding: 1rem;
-`
-
-const Headline = styled.h2`
-  font-size: 1.25rem;
-  font-weight: normal;
-`
-
-const Form = styled.div`
-  display: flex;
-  gap: 1rem;
-  width: 100%;
-`
-
-const TextFields = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-`
-
-const makeFormHandler = (value: string, setter: (val: string) => void) => ({
-  value,
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => setter(e.target.value),
-})
-
-type WithFieldSize = { fieldSize?: 'md' | 'lg' }
-
-const InputGroup: React.FC<
-  { label: React.ReactNode } & WithFieldSize &
-    React.InputHTMLAttributes<HTMLInputElement>
-> = ({ label, fieldSize, ...inputProps }) => {
-  return (
-    <InputLabel>
-      <span>
-        {label}
-        {!inputProps.required && <Optional>(optional)</Optional>}
-      </span>
-      <Input fieldSize={fieldSize} {...inputProps} />
-    </InputLabel>
-  )
-}
-
-const InputLabel = styled.label`
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  width: 100%;
-
-  span {
-    font-size: 0.75rem;
-  }
-`
-
-const Optional = styled.span`
-  color: var(--color-text--muted);
-  margin-left: 0.5ch;
-`
-
-const Input = styled.input<WithFieldSize>`
-  width: 100%;
-  background-color: var(--color-bg-interactive);
-  border: var(--border);
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-
-  ${(p) =>
-    p.fieldSize === 'lg' &&
-    css`
-      font-size: 1.5rem;
-    `};
-
-  ::placeholder {
-    color: var(--color-text--muted);
-    font-style: italic;
-  }
-
-  :focus,
-  :focus-visible {
-    outline: none;
-  }
-`
-
-const Actions = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`
-
-const PreviewContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`
-
-const Preview = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-`
-
-const AlbumCoverPreview = styled.img<{ disabled?: boolean }>`
-  width: 2rem;
-  height: 2rem;
-  object-fit: cover;
-  object-position: center;
-  aspect-ratio: 1 / 1;
-
-  ${(p) =>
-    p.disabled &&
-    css`
-      opacity: 0.3;
-    `}
-`
-
-const FormatSelectContainer = styled.label`
-  position: relative;
-  border: 1px solid var(--color-border);
-  border-radius: 0.25rem;
-  cursor: pointer;
-
-  svg {
-    position: absolute;
-    top: 50%;
-    right: 0.25rem;
-    transform: translateY(-50%);
-    width: 0.75rem;
-    height: 0.75rem;
-    fill: currentColor;
-    flex-shrink: 0;
-  }
-`
-
-const FormatSelect = styled.select`
-  appearance: none;
-  padding: 0.25rem 1.5rem 0.25rem 0.25rem;
-  border: 0;
-  font: inherit;
-  background: transparent;
-  color: var(--color-text);
-  flex: 1;
-  cursor: pointer;
-`
-
-const FormatInfoBubble = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  border: 1px solid var(--color-border);
-  padding: 0.5rem;
-  font-size: 0.75rem;
-  border-radius: 0.25rem;
-  max-width: 21rem;
-
-  svg {
-    margin-top: 0.2rem;
-    fill: var(--color-info);
-    flex-shrink: 0;
-  }
-`
