@@ -44,6 +44,7 @@ export const Dropzone: React.FC<{
         value={value}
         accept={accept}
         multiple={multiple}
+        tabIndex={-1}
       />
     </DropzoneContainer>
   )

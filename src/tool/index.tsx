@@ -9,10 +9,11 @@ import {
 } from './dropzone'
 import { TrackEditor } from './track-editor'
 import ImportIcon from '../icons/import.svg?react'
+import ExportIcon from '../icons/export.svg?react'
 import { getExtension, guessFormatFromExtension } from '../util/file-helpers'
-import { TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
+import { Format, TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
 import { pushBottom, pushRightSm, pushTopXs } from '../design/style-utils.ts'
-import { MainContainer } from '../design/layout'
+import { MainInnerContainer, MainOuterContainer } from '../design/layout'
 import { trackLoadedTrack, trackProbedTrack } from '../util/tracker'
 import { Selector, SelectorOption } from '../design/selector.tsx'
 import {
@@ -22,7 +23,14 @@ import {
   WithEditMode,
 } from './edit-mode.ts'
 import { useAtom } from 'jotai'
-import { trackUploadsAtom } from './state.ts'
+import { multiFormatAtom, trackUploadsAtom } from './state.ts'
+import {
+  MultiEditorHeaderRow,
+  MultiEditorTable,
+} from './multi-track-editor-row.tsx'
+import { Button } from '../design/buttons.tsx'
+import { mediaQuery } from '../design/responsive.tsx'
+import { FormatSelector } from './components/format-selector.tsx'
 
 export type UploadedFile = {
   id: string
@@ -129,95 +137,145 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   invalidFileFormats,
 }) => {
   const [editMode, setEditMode] = useState<EditMode>('single')
+  const [multiFormat, setMultiFormat] = useAtom(multiFormatAtom)
 
   return (
-    <MainContainer>
-      <h1 css={[pushBottom, pushTopXs]}>Styler tool</h1>
+    <MainOuterContainer>
+      <MainInnerContainer>
+        <h1 css={[pushBottom, pushTopXs]}>Styler tool</h1>
 
-      <Dropzone
-        onChange={handleFilesAdded}
-        accept=".aif,.aiff,.wav,.mp3,.flac"
-        multiple
-        containerCss={css`
-          padding: 2rem 1rem;
-        `}
-      >
-        <DropzoneInstructions>
-          <DropzoneInstructionsLeft>
-            <ImportIcon css={[pushRightSm]} />
-            <DropzoneText>Drop a track</DropzoneText>
-          </DropzoneInstructionsLeft>
-          <DropzoneInstructionsRight>
-            <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
-            <DropzoneTextSmMuted>
-              <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
-            </DropzoneTextSmMuted>
-          </DropzoneInstructionsRight>
-        </DropzoneInstructions>
-      </Dropzone>
-
-      {invalidFileFormats.length > 1 && (
-        <ErrorText>
-          File formats {invalidFileFormats.join(', ')} not supported
-        </ErrorText>
-      )}
-      {invalidFileFormats.length === 1 && (
-        <ErrorText>File format {invalidFileFormats[0]} not supported</ErrorText>
-      )}
-
-      <div
-        css={css`
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          width: 100%;
-          padding: 1rem 0;
-        `}
-      >
-        <div
-          css={css`
-            font-family: var(--font-brand), sans-serif;
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding-bottom: 0.25rem;
+        <Dropzone
+          onChange={handleFilesAdded}
+          accept=".aif,.aiff,.wav,.mp3,.flac"
+          multiple
+          containerCss={css`
+            padding: 2rem 1rem;
           `}
         >
-          Edit mode
-        </div>
-        <Selector formName="edit-mode">
-          <SelectorOption
-            checked={editMode === 'multi'}
-            onChange={(e) => {
-              if (e.target.checked) {
-                setEditMode('multi')
-              }
-            }}
-          >
-            Multi
-          </SelectorOption>
-          <SelectorOption
-            checked={editMode === 'single'}
-            onChange={(e) => {
-              if (e.target.checked) {
-                setEditMode('single')
-              }
-            }}
-          >
-            Single
-          </SelectorOption>
-        </Selector>
-      </div>
+          <DropzoneInstructions>
+            <DropzoneInstructionsLeft>
+              <ImportIcon css={[pushRightSm]} />
+              <DropzoneText>Drop a track</DropzoneText>
+            </DropzoneInstructionsLeft>
+            <DropzoneInstructionsRight>
+              <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
+              <DropzoneTextSmMuted>
+                <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
+              </DropzoneTextSmMuted>
+            </DropzoneInstructionsRight>
+          </DropzoneInstructions>
+        </Dropzone>
 
-      <TrackEditors editMode={editMode}>
-        {currentFiles.map((fileSAndState) => (
-          <TrackEditor
-            key={fileSAndState.uploadedFile.id}
-            fileAndState={fileSAndState}
-            editMode={editMode}
-          />
-        ))}
-      </TrackEditors>
-    </MainContainer>
+        {invalidFileFormats.length > 1 && (
+          <ErrorText>
+            File formats {invalidFileFormats.join(', ')} not supported
+          </ErrorText>
+        )}
+        {invalidFileFormats.length === 1 && (
+          <ErrorText>
+            File format {invalidFileFormats[0]} not supported
+          </ErrorText>
+        )}
+        <div
+          css={css`
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 0;
+          `}
+        >
+          <div>
+            <div
+              css={css`
+                font-family: var(--font-brand), sans-serif;
+                font-size: 0.75rem;
+                font-weight: 500;
+                padding-bottom: 0.25rem;
+              `}
+            >
+              Edit mode
+            </div>
+            <Selector formName="edit-mode">
+              <SelectorOption
+                checked={editMode === 'multi'}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setEditMode('multi')
+                  }
+                }}
+              >
+                Multi
+              </SelectorOption>
+              <SelectorOption
+                checked={editMode === 'single'}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setEditMode('single')
+                  }
+                }}
+              >
+                Single
+              </SelectorOption>
+            </Selector>
+          </div>
+
+          {isMultiMode(editMode) && currentFiles.length > 0 && (
+            <div
+              css={css`
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+              `}
+            >
+              <FormatSelector
+                onChange={(e) => setMultiFormat(e.target.value as Format)}
+                value={multiFormat}
+              />
+              <Button>
+                <ExportIcon css={pushRightSm} />
+                Download all
+              </Button>
+            </div>
+          )}
+        </div>
+      </MainInnerContainer>
+
+      <MainInnerContainer
+        maxWidth={isMultiMode(editMode) ? '100vw' : undefined}
+        gutter={false}
+      >
+        <TrackEditors editMode={editMode}>
+          {isMultiMode(editMode) && currentFiles.length > 0 && (
+            <MultiEditorTable>
+              <thead>
+                <MultiEditorHeaderRow />
+              </thead>
+              <tbody>
+                {currentFiles.map((fileSAndState, index) => (
+                  <TrackEditor
+                    key={fileSAndState.uploadedFile.id}
+                    fileAndState={fileSAndState}
+                    editMode={editMode}
+                    isFirstRow={index === 0}
+                  />
+                ))}
+              </tbody>
+            </MultiEditorTable>
+          )}
+
+          {isSingleMode(editMode) &&
+            currentFiles.map((fileSAndState) => (
+              <TrackEditor
+                key={fileSAndState.uploadedFile.id}
+                fileAndState={fileSAndState}
+                editMode={editMode}
+              />
+            ))}
+        </TrackEditors>
+      </MainInnerContainer>
+    </MainOuterContainer>
   )
 }
 
@@ -264,6 +322,12 @@ const TrackEditors = styled.div<WithEditMode>`
   ${(p) =>
     isMultiMode(p) &&
     css`
-      display: table;
+      max-width: 100vw;
+      padding: 0 1rem;
+      overflow-x: auto;
+
+      ${mediaQuery.tabletUp`
+        padding: 0 2rem;
+      `}
     `}
 `

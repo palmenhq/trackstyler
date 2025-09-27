@@ -1,6 +1,10 @@
 import { atom, useSetAtom } from 'jotai'
 import { useCallback, useMemo } from 'react'
-import { cleanString, guessFormatFromExtension } from '../util/file-helpers.ts'
+import {
+  cleanString,
+  guessFormatFromExtension,
+  removeExtension,
+} from '../util/file-helpers.ts'
 import { UploadedFile } from './index.tsx'
 import { Format } from '../ffmpeg.tsx'
 
@@ -87,7 +91,7 @@ export const useTrackEditorState = (uploadedFileAndState: FileAndState) => {
             artist: cleanArtist,
             recordLabel: cleanRecordLabel,
           })
-        : uploadedFile.file.name
+        : removeExtension(uploadedFile.file.name)
 
     return {
       ...trackForm,
@@ -149,3 +153,13 @@ const serializeFileName = ({
   const safeNewName = cleanString(newName).replace(/\s{2,}/g, ' ')
   return safeNewName
 }
+
+export const makeFormHandler =
+  (trackState: TrackFormState, setter: (s: Partial<TrackFormState>) => void) =>
+  <TProp extends keyof TrackFormState>(property: TProp) => ({
+    value: trackState[property] ?? undefined,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setter({ [property]: e.target.value }),
+  })
+
+export const multiFormatAtom = atom<Format>('aiff')

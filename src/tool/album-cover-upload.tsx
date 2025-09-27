@@ -1,17 +1,22 @@
-import { Dropzone, DropzoneText } from './dropzone'
-import { css } from '@emotion/react'
+import { Dropzone } from './dropzone'
+import { css, SerializedStyles } from '@emotion/react'
 import styled from '@emotion/styled'
-import { useMemo, useState } from 'react'
+import { PropsWithChildren, useMemo, useState } from 'react'
 
 export const AlbumCoverUpload = ({
   setValue,
   value,
   defaultAlbumCover,
-}: {
+  className,
+  containerCss,
+  children,
+}: PropsWithChildren<{
   value?: File | null
   setValue?: (value: File | null) => void
   defaultAlbumCover?: File | null
-}) => {
+  className?: string
+  containerCss?: SerializedStyles
+}>) => {
   const [albumCoverValue, setAlbumCoverValue] = useState<string | undefined>()
 
   const albumCoverUrl = useMemo(() => {
@@ -22,7 +27,7 @@ export const AlbumCoverUpload = ({
   }, [defaultAlbumCover, value])
 
   return (
-    <AlbumCover>
+    <AlbumCover className={className} css={containerCss}>
       <Dropzone
         containerCss={css`
           width: 100%;
@@ -62,14 +67,7 @@ export const AlbumCoverUpload = ({
         value={albumCoverValue}
         accept="image/*"
       >
-        <DropzoneText
-          css={css`
-            text-shadow: 0 0 5px #000000cc;
-            opacity: 0.8;
-          `}
-        >
-          Drop picture
-        </DropzoneText>
+        {children}
       </Dropzone>
     </AlbumCover>
   )

@@ -1,6 +1,6 @@
 import styled from '@emotion/styled'
 import { css } from '@emotion/react'
-import { TrackFormState, TrackState } from './state.ts'
+import { makeFormHandler, TrackFormState, TrackState } from './state.ts'
 import { useMemo } from 'react'
 import { UploadedFile } from './index.tsx'
 import { AlbumCoverUpload } from './album-cover-upload.tsx'
@@ -11,6 +11,7 @@ import { Button } from '../design/buttons.tsx'
 import { pushRightXs, spin } from '../design/style-utils.ts'
 import ExportIcon from '../icons/export.svg?react'
 import LoadingIcon from '../icons/loading.svg?react'
+import { DropzoneText } from './dropzone.tsx'
 
 export const SingleTrackEditor = ({
   trackState,
@@ -43,7 +44,16 @@ export const SingleTrackEditor = ({
             setTrackState({ albumCover: albumCoverFile })
           }
           defaultAlbumCover={uploadedFile.metadata?.albumCover}
-        />
+        >
+          <DropzoneText
+            css={css`
+              text-shadow: 0 0 5px #000000cc;
+              opacity: 0.8;
+            `}
+          >
+            Drop picture
+          </DropzoneText>
+        </AlbumCoverUpload>
 
         <TextFields>
           <InputGroup
@@ -149,14 +159,6 @@ const TextFields = styled.div`
   gap: 1rem;
   width: 100%;
 `
-
-const makeFormHandler =
-  (trackState: TrackFormState, setter: (s: Partial<TrackFormState>) => void) =>
-  <TProp extends keyof TrackFormState>(property: TProp) => ({
-    value: trackState[property] ?? undefined,
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-      setter({ [property]: e.target.value }),
-  })
 
 type WithFieldSize = { fieldSize?: 'md' | 'lg' }
 

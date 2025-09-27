@@ -4,7 +4,7 @@
 :root {
   --color-brand-green: #8fd919;
   --color-brand-green--light: #b6d887;
-  --color-info: #0ac0b4;
+  --color-info: #428fda;
   --color-error: #fd4b60;
   --color-text: #fff;
   --color-text--muted: #999999;
@@ -13,6 +13,7 @@
   --color-bg-interactive: #313131;
   --color-bg-interactive--active: #3a3a3a;
   --color-bg: #202020;
+  --color-bg--fully-transparent: #20202000;
 
   --border: 1px solid var(--color-border);
 

@@ -1,21 +1,29 @@
 import { useTrackConvert } from '../ffmpeg'
 import { triggerDownload } from '../util/file-helpers'
 import { trackSaveTrackFinished, trackSaveTrackStarted } from '../util/tracker'
-import { isSingleMode, WithEditMode } from './edit-mode.ts'
-import { FileAndState, useTrackEditorState } from './state.ts'
+import { isMultiMode, isSingleMode, WithEditMode } from './edit-mode.ts'
+import { FileAndState, multiFormatAtom, useTrackEditorState } from './state.ts'
 import { SingleTrackEditor } from './single-track-editor.tsx'
+import { MultiTrackEditorRow } from './multi-track-editor-row.tsx'
+import { useCallback } from 'react'
+import { useAtomValue } from 'jotai'
 
 export const TrackEditor: React.FC<
   WithEditMode & {
     fileAndState: FileAndState
+    isFirstRow?: boolean
   }
 > = ({ fileAndState, editMode }) => {
   const [trackEditorState, setTrackEditorState] =
     useTrackEditorState(fileAndState)
+  const multiFormat = useAtomValue(multiFormatAtom)
 
   const trackConverter = useTrackConvert({
     uploadedFile: fileAndState.uploadedFile,
-    targetFormat: trackEditorState.targetFormat,
+    targetFormat:
+      isMultiMode(editMode) && trackEditorState.sourceFormat !== 'mp3'
+        ? multiFormat
+        : trackEditorState.targetFormat,
     sourceFormat: trackEditorState.sourceFormat,
     metadata: {
       title: trackEditorState.cleanTitle,
@@ -26,6 +34,44 @@ export const TrackEditor: React.FC<
     },
   })
 
+  const handleDownload = useCallback(() => {
+    trackSaveTrackStarted({
+      targetFormat: trackEditorState.targetFormat,
+      sourceFormat: trackEditorState.sourceFormat,
+      filledTitle: !!trackEditorState.cleanTitle,
+      filledAlbum: !!trackEditorState.cleanAlbum,
+      filledArtist: !!trackEditorState.cleanArtist,
+      filledAlbumCover: !!trackEditorState.albumCoverUrl,
+      filledRecordLabel: !!trackEditorState.cleanRecordLabel,
+    })
+    const startSaveTime = Date.now()
+
+    trackConverter.convertTrack().then((convertedTrackBlob) => {
+      if (convertedTrackBlob) {
+        triggerDownload(
+          `${trackEditorState.newFileName}.${trackEditorState.targetFormat}`,
+          convertedTrackBlob,
+        )
+      }
+
+      trackSaveTrackFinished({
+        sourceFormat: trackEditorState.sourceFormat,
+        targetFormat: trackEditorState.targetFormat,
+        saveTime_ms: Date.now() - startSaveTime,
+      })
+    })
+  }, [
+    trackConverter,
+    trackEditorState.albumCoverUrl,
+    trackEditorState.cleanAlbum,
+    trackEditorState.cleanArtist,
+    trackEditorState.cleanRecordLabel,
+    trackEditorState.cleanTitle,
+    trackEditorState.newFileName,
+    trackEditorState.sourceFormat,
+    trackEditorState.targetFormat,
+  ])
+
   return (
     <>
       {isSingleMode(editMode) && (
@@ -33,33 +79,14 @@ export const TrackEditor: React.FC<
           trackState={trackEditorState}
           setTrackState={setTrackEditorState}
           uploadedFile={fileAndState.uploadedFile}
-          onDownload={() => {
-            trackSaveTrackStarted({
-              targetFormat: trackEditorState.targetFormat,
-              sourceFormat: trackEditorState.sourceFormat,
-              filledTitle: !!trackEditorState.cleanTitle,
-              filledAlbum: !!trackEditorState.cleanAlbum,
-              filledArtist: !!trackEditorState.cleanArtist,
-              filledAlbumCover: !!trackEditorState.albumCoverUrl,
-              filledRecordLabel: !!trackEditorState.cleanRecordLabel,
-            })
-            const startSaveTime = Date.now()
-
-            trackConverter.convertTrack().then((convertedTrackBlob) => {
-              if (convertedTrackBlob) {
-                triggerDownload(
-                  `${trackEditorState.newFileName}.${trackEditorState.targetFormat}`,
-                  convertedTrackBlob,
-                )
-              }
-
-              trackSaveTrackFinished({
-                sourceFormat: trackEditorState.sourceFormat,
-                targetFormat: trackEditorState.targetFormat,
-                saveTime_ms: Date.now() - startSaveTime,
-              })
-            })
-          }}
+          onDownload={handleDownload}
+          trackConverter={trackConverter}
+        />
+      )}
+      {isMultiMode(editMode) && (
+        <MultiTrackEditorRow
+          fileAndState={fileAndState}
+          onDownload={handleDownload}
           trackConverter={trackConverter}
         />
       )}

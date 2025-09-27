@@ -1,7 +1,7 @@
 import { FC, PropsWithChildren } from 'react'
 import styled from '@emotion/styled'
 import { useLocationPathName } from '../util/use-location-path-name.ts'
-import { css } from '@emotion/react'
+import { css, SerializedStyles } from '@emotion/react'
 import { hiddenMobile, mediaQuery, screenSizes } from './responsive'
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
@@ -67,13 +67,20 @@ export const MainOuterContainer = styled.div`
   align-items: center;
 `
 
-export const MainInnerContainer = styled.div`
-  padding: 1rem;
-  ${maxWidth};
+export const MainInnerContainer = styled.div<{
+  maxWidth?: SerializedStyles | string
+  gutter?: boolean
+}>`
+  ${(p) => p.maxWidth ?? maxWidth};
 
-  ${mediaQuery.tabletUp`
-    padding: 2rem;
-  `};
+  ${(p) =>
+    (p.gutter ?? true) &&
+    css`
+      padding: 1rem;
+      ${mediaQuery.tabletUp`
+        padding: 2rem;
+      `};
+    `}
 `
 
 export const MainContainer: React.FC<PropsWithChildren> = ({ children }) => {
