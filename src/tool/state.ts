@@ -34,6 +34,52 @@ export type FileAndState = {
 }
 export const trackUploadsAtom = atom<Array<FileAndState>>([])
 
+export const getTrackFormState = (
+  uploadedFileAndState: FileAndState,
+  sourceFormat: 'aiff' | 'wav' | 'flac' | 'mp3',
+) =>
+  uploadedFileAndState.state ?? {
+    title: uploadedFileAndState.uploadedFile.metadata?.title ?? '',
+    artist: uploadedFileAndState.uploadedFile.metadata?.artist ?? '',
+    album: uploadedFileAndState.uploadedFile.metadata?.album ?? '',
+    albumCover: uploadedFileAndState.uploadedFile.metadata?.albumCover ?? null,
+    recordLabel: uploadedFileAndState.uploadedFile.metadata?.publisher ?? '',
+    selectedFormat: sourceFormat,
+  }
+
+export const getEnhancedTrackData = (
+  trackForm: TrackFormState,
+  uploadedFile: UploadedFile,
+  sourceFormat: Format,
+  albumCoverUrl: string | null,
+) => {
+  const cleanTitle = trackForm.title.trim()
+  const cleanArtist = trackForm.artist.trim()
+  const cleanRecordLabel = trackForm.recordLabel.trim()
+  const cleanAlbum = trackForm.album.trim()
+
+  const serializedFileName =
+    !!cleanTitle && !!cleanArtist
+      ? serializeFileName({
+          title: cleanTitle,
+          artist: cleanArtist,
+          recordLabel: cleanRecordLabel,
+        })
+      : removeExtension(uploadedFile.file.name)
+
+  return {
+    ...trackForm,
+    cleanTitle,
+    cleanArtist,
+    cleanRecordLabel,
+    cleanAlbum: cleanAlbum,
+    newFileName: serializedFileName,
+    sourceFormat,
+    targetFormat: trackForm.selectedFormat || sourceFormat,
+    albumCoverUrl,
+  }
+}
+
 export const useTrackEditorState = (uploadedFileAndState: FileAndState) => {
   const setTracks = useSetAtom(trackUploadsAtom)
 
@@ -48,24 +94,8 @@ export const useTrackEditorState = (uploadedFileAndState: FileAndState) => {
   )
 
   const trackForm = useMemo(
-    () =>
-      uploadedFileAndState.state ?? {
-        title: uploadedFile.metadata?.title ?? '',
-        artist: uploadedFile.metadata?.artist ?? '',
-        album: uploadedFile.metadata?.album ?? '',
-        albumCover: uploadedFile.metadata?.albumCover ?? null,
-        recordLabel: uploadedFile.metadata?.publisher ?? '',
-        selectedFormat: sourceFormat,
-      },
-    [
-      sourceFormat,
-      uploadedFile.metadata?.album,
-      uploadedFile.metadata?.albumCover,
-      uploadedFile.metadata?.artist,
-      uploadedFile.metadata?.publisher,
-      uploadedFile.metadata?.title,
-      uploadedFileAndState.state,
-    ],
+    () => getTrackFormState(uploadedFileAndState, sourceFormat),
+    [sourceFormat, uploadedFileAndState],
   )
 
   const albumCoverUrl = useMemo(() => {
@@ -79,32 +109,13 @@ export const useTrackEditorState = (uploadedFileAndState: FileAndState) => {
   }, [trackForm.albumCover, uploadedFile.metadata?.albumCover])
 
   const enhancedTrack = useMemo<TrackState>(() => {
-    const cleanTitle = trackForm.title.trim()
-    const cleanArtist = trackForm.artist.trim()
-    const cleanRecordLabel = trackForm.recordLabel.trim()
-    const cleanAlbum = trackForm.album.trim()
-
-    const serializedFileName =
-      !!cleanTitle && !!cleanArtist
-        ? serializeFileName({
-            title: cleanTitle,
-            artist: cleanArtist,
-            recordLabel: cleanRecordLabel,
-          })
-        : removeExtension(uploadedFile.file.name)
-
-    return {
-      ...trackForm,
-      cleanTitle,
-      cleanArtist,
-      cleanRecordLabel,
-      cleanAlbum: cleanAlbum,
-      newFileName: serializedFileName,
+    return getEnhancedTrackData(
+      trackForm,
+      uploadedFile,
       sourceFormat,
-      targetFormat: trackForm.selectedFormat || sourceFormat,
       albumCoverUrl,
-    }
-  }, [trackForm, uploadedFile.file.name, sourceFormat, albumCoverUrl])
+    )
+  }, [trackForm, uploadedFile, sourceFormat, albumCoverUrl])
 
   const setTrack = useCallback(
     (newValues: Partial<Optional<TrackFormState>>) =>
@@ -163,3 +174,5 @@ export const makeFormHandler =
   })
 
 export const multiFormatAtom = atom<Format>('aiff')
+
+export const downloadersRegistryAtom = atom(new Set<() => Promise<void>>())

@@ -12,6 +12,7 @@ export const TrackEditor: React.FC<
   WithEditMode & {
     fileAndState: FileAndState
     isFirstRow?: boolean
+    registerDownloadAction?: (action: () => Promise<void>) => void
   }
 > = ({ fileAndState, editMode }) => {
   const [trackEditorState, setTrackEditorState] =
@@ -46,7 +47,7 @@ export const TrackEditor: React.FC<
     })
     const startSaveTime = Date.now()
 
-    trackConverter.convertTrack().then((convertedTrackBlob) => {
+    return trackConverter.convertTrack().then((convertedTrackBlob) => {
       if (convertedTrackBlob) {
         triggerDownload(
           `${trackEditorState.newFileName}.${trackEditorState.targetFormat}`,

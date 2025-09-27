@@ -1,4 +1,5 @@
 import {
+  downloadersRegistryAtom,
   FileAndState,
   makeFormHandler,
   multiFormatAtom,
@@ -18,11 +19,11 @@ import { Button } from '../design/buttons.tsx'
 import { pushRightSm, pushRightXs, spin } from '../design/style-utils.ts'
 import { useAtomValue } from 'jotai'
 import { FormatInfo } from './components/format-info.tsx'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 interface MultiTrackEditorRowProps {
   fileAndState: FileAndState
-  onDownload: () => void
+  onDownload: () => Promise<void>
   trackConverter: {
     isReady: boolean
     isBusy: boolean
@@ -39,6 +40,15 @@ export const MultiTrackEditorRow = ({
 }: MultiTrackEditorRowProps) => {
   const [trackState, setTrackState] = useTrackEditorState(fileAndState)
   const multiFormat = useAtomValue(multiFormatAtom)
+  const downloadsRegistry = useAtomValue(downloadersRegistryAtom)
+
+  useEffect(() => {
+    downloadsRegistry.add(onDownload)
+
+    return () => {
+      downloadsRegistry.delete(onDownload)
+    }
+  }, [onDownload])
 
   return (
     <Row>

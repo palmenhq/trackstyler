@@ -22,8 +22,12 @@ import {
   isSingleMode,
   WithEditMode,
 } from './edit-mode.ts'
-import { useAtom } from 'jotai'
-import { multiFormatAtom, trackUploadsAtom } from './state.ts'
+import { useAtom, useAtomValue } from 'jotai'
+import {
+  downloadersRegistryAtom,
+  multiFormatAtom,
+  trackUploadsAtom,
+} from './state.ts'
 import {
   MultiEditorHeaderRow,
   MultiEditorTable,
@@ -131,6 +135,47 @@ const useTrackUpload = () => {
 
 type FileUploadActions = ReturnType<typeof useTrackUpload>
 
+const TrackUploader = ({
+  invalidFileFormats,
+  onChange,
+}: {
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  invalidFileFormats: string[]
+}) => (
+  <>
+    <Dropzone
+      onChange={onChange}
+      accept=".aif,.aiff,.wav,.mp3,.flac"
+      multiple
+      containerCss={css`
+        padding: 2rem 1rem;
+      `}
+    >
+      <DropzoneInstructions>
+        <DropzoneInstructionsLeft>
+          <ImportIcon css={[pushRightSm]} />
+          <DropzoneText>Drop a track</DropzoneText>
+        </DropzoneInstructionsLeft>
+        <DropzoneInstructionsRight>
+          <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
+          <DropzoneTextSmMuted>
+            <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
+          </DropzoneTextSmMuted>
+        </DropzoneInstructionsRight>
+      </DropzoneInstructions>
+    </Dropzone>
+
+    {invalidFileFormats.length > 1 && (
+      <ErrorText>
+        File formats {invalidFileFormats.join(', ')} not supported
+      </ErrorText>
+    )}
+    {invalidFileFormats.length === 1 && (
+      <ErrorText>File format {invalidFileFormats[0]} not supported</ErrorText>
+    )}
+  </>
+)
+
 export const TrackEditView: React.FC<FileUploadActions> = ({
   handleFilesAdded,
   currentFiles,
@@ -138,44 +183,25 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
 }) => {
   const [editMode, setEditMode] = useState<EditMode>('single')
   const [multiFormat, setMultiFormat] = useAtom(multiFormatAtom)
+  const downloadersRegistry = useAtomValue(downloadersRegistryAtom)
+
+  const handleDownloadAll = useCallback(async () => {
+    const downloaders = [...downloadersRegistry]
+    for (const download of downloaders) {
+      await download()
+    }
+  }, [downloadersRegistry])
 
   return (
     <MainOuterContainer>
       <MainInnerContainer>
         <h1 css={[pushBottom, pushTopXs]}>Styler tool</h1>
 
-        <Dropzone
+        <TrackUploader
           onChange={handleFilesAdded}
-          accept=".aif,.aiff,.wav,.mp3,.flac"
-          multiple
-          containerCss={css`
-            padding: 2rem 1rem;
-          `}
-        >
-          <DropzoneInstructions>
-            <DropzoneInstructionsLeft>
-              <ImportIcon css={[pushRightSm]} />
-              <DropzoneText>Drop a track</DropzoneText>
-            </DropzoneInstructionsLeft>
-            <DropzoneInstructionsRight>
-              <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
-              <DropzoneTextSmMuted>
-                <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
-              </DropzoneTextSmMuted>
-            </DropzoneInstructionsRight>
-          </DropzoneInstructions>
-        </Dropzone>
+          invalidFileFormats={invalidFileFormats}
+        />
 
-        {invalidFileFormats.length > 1 && (
-          <ErrorText>
-            File formats {invalidFileFormats.join(', ')} not supported
-          </ErrorText>
-        )}
-        {invalidFileFormats.length === 1 && (
-          <ErrorText>
-            File format {invalidFileFormats[0]} not supported
-          </ErrorText>
-        )}
         <div
           css={css`
             display: flex;
@@ -186,40 +212,12 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
             padding: 1rem 0;
           `}
         >
-          <div>
-            <div
-              css={css`
-                font-family: var(--font-brand), sans-serif;
-                font-size: 0.75rem;
-                font-weight: 500;
-                padding-bottom: 0.25rem;
-              `}
-            >
-              Edit mode
-            </div>
-            <Selector formName="edit-mode">
-              <SelectorOption
-                checked={editMode === 'multi'}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setEditMode('multi')
-                  }
-                }}
-              >
-                Multi
-              </SelectorOption>
-              <SelectorOption
-                checked={editMode === 'single'}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setEditMode('single')
-                  }
-                }}
-              >
-                Single
-              </SelectorOption>
-            </Selector>
-          </div>
+          <EditModeSelector
+            editMode={editMode}
+            onChange={(mode: EditMode) => {
+              setEditMode(mode)
+            }}
+          />
 
           {isMultiMode(editMode) && currentFiles.length > 0 && (
             <div
@@ -233,7 +231,7 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
                 onChange={(e) => setMultiFormat(e.target.value as Format)}
                 value={multiFormat}
               />
-              <Button>
+              <Button onClick={handleDownloadAll}>
                 <ExportIcon css={pushRightSm} />
                 Download all
               </Button>
@@ -283,6 +281,49 @@ export const TrackEdit = () => {
   const uploadProps = useTrackUpload()
   return <TrackEditView {...uploadProps} />
 }
+
+const EditModeSelector = ({
+  editMode,
+  onChange,
+}: {
+  editMode: 'multi' | 'single'
+  onChange: (mode: EditMode) => void
+}) => (
+  <div>
+    <div
+      css={css`
+        font-family: var(--font-brand), sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding-bottom: 0.25rem;
+      `}
+    >
+      Edit mode
+    </div>
+    <Selector formName="edit-mode">
+      <SelectorOption
+        checked={editMode === 'multi'}
+        onChange={(e) => {
+          if (e.target.checked) {
+            onChange('multi')
+          }
+        }}
+      >
+        Multi
+      </SelectorOption>
+      <SelectorOption
+        checked={editMode === 'single'}
+        onChange={(e) => {
+          if (e.target.checked) {
+            onChange('single')
+          }
+        }}
+      >
+        Single
+      </SelectorOption>
+    </Selector>
+  </div>
+)
 
 const DropzoneInstructions = styled.div`
   display: flex;
