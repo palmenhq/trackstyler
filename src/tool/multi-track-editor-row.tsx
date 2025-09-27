@@ -119,10 +119,8 @@ export const MultiTrackEditorRow = ({
           >
             {!trackConverter.isBusy && <ExportIcon css={pushRightSm} />}
             {trackConverter.isBusy && <LoadingIcon css={[pushRightXs, spin]} />}
-            {multiFormat === trackState?.sourceFormat && <>Download</>}
-            {multiFormat !== trackState?.sourceFormat && (
-              <>Convert & Download</>
-            )}
+            {multiFormat === trackState?.sourceFormat && <>Save</>}
+            {multiFormat !== trackState?.sourceFormat && <>Convert & Save</>}
           </Button>
           {trackState && (
             <FormatInfo

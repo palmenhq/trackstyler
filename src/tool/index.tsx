@@ -10,9 +10,15 @@ import {
 import { TrackEditor } from './track-editor'
 import ImportIcon from '../icons/import.svg?react'
 import ExportIcon from '../icons/export.svg?react'
+import LoadingIcon from '../icons/loading.svg?react'
 import { getExtension, guessFormatFromExtension } from '../util/file-helpers'
 import { Format, TrackMetadataInfo, useProbeMetadata } from '../ffmpeg'
-import { pushBottom, pushRightSm, pushTopXs } from '../design/style-utils.ts'
+import {
+  pushBottom,
+  pushRightSm,
+  pushTopXs,
+  spin,
+} from '../design/style-utils.ts'
 import { MainInnerContainer, MainOuterContainer } from '../design/layout'
 import { trackLoadedTrack, trackProbedTrack } from '../util/tracker'
 import { Selector, SelectorOption } from '../design/selector.tsx'
@@ -184,12 +190,15 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
   const [editMode, setEditMode] = useState<EditMode>('single')
   const [multiFormat, setMultiFormat] = useAtom(multiFormatAtom)
   const downloadersRegistry = useAtomValue(downloadersRegistryAtom)
+  const [downloadAllIsBusy, setDownloadAllIsBusy] = useState(false)
 
   const handleDownloadAll = useCallback(async () => {
+    setDownloadAllIsBusy(true)
     const downloaders = [...downloadersRegistry]
     for (const download of downloaders) {
       await download()
     }
+    setDownloadAllIsBusy(false)
   }, [downloadersRegistry])
 
   return (
@@ -231,9 +240,10 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
                 onChange={(e) => setMultiFormat(e.target.value as Format)}
                 value={multiFormat}
               />
-              <Button onClick={handleDownloadAll}>
-                <ExportIcon css={pushRightSm} />
-                Download all
+              <Button onClick={handleDownloadAll} disabled={downloadAllIsBusy}>
+                {!downloadAllIsBusy && <ExportIcon css={pushRightSm} />}
+                {downloadAllIsBusy && <LoadingIcon css={[spin, pushRightSm]} />}
+                Save all
               </Button>
             </div>
           )}
