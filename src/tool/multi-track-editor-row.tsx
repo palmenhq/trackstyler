@@ -2,7 +2,6 @@ import {
   downloadersRegistryAtom,
   FileAndState,
   makeFormHandler,
-  multiFormatAtom,
   TrackFormState,
   TrackState,
   useTrackEditorState,
@@ -18,11 +17,13 @@ import { mediaQuery } from '../design/responsive.tsx'
 import { Button } from '../design/buttons.tsx'
 import { pushRightSm, pushRightXs, spin } from '../design/style-utils.ts'
 import { useAtomValue } from 'jotai'
-import { FormatInfo } from './components/format-info.tsx'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { FormatInfoPopover } from './components/format-info.tsx'
+import { Format } from '../ffmpeg.tsx'
 
 interface MultiTrackEditorRowProps {
   fileAndState: FileAndState
+  targetFormatWithMulti: Format
   onDownload: () => Promise<void>
   trackConverter: {
     isReady: boolean
@@ -37,9 +38,9 @@ export const MultiTrackEditorRow = ({
   onDownload,
   trackConverter,
   isFirstRow,
+  targetFormatWithMulti,
 }: MultiTrackEditorRowProps) => {
   const [trackState, setTrackState] = useTrackEditorState(fileAndState)
-  const multiFormat = useAtomValue(multiFormatAtom)
   const downloadsRegistry = useAtomValue(downloadersRegistryAtom)
 
   useEffect(() => {
@@ -119,16 +120,16 @@ export const MultiTrackEditorRow = ({
           >
             {!trackConverter.isBusy && <ExportIcon css={pushRightSm} />}
             {trackConverter.isBusy && <LoadingIcon css={[pushRightXs, spin]} />}
-            {multiFormat === trackState?.sourceFormat && <>Save</>}
-            {multiFormat !== trackState?.sourceFormat && <>Convert & Save</>}
+            {targetFormatWithMulti === trackState.sourceFormat && <>Save</>}
+            {targetFormatWithMulti !== trackState?.sourceFormat && (
+              <>Convert & Save</>
+            )}
           </Button>
-          {trackState && (
-            <FormatInfo
-              sourceFormat={trackState.sourceFormat}
-              targetFormat={multiFormat}
-              hasAlbumCover={!!trackState.albumCover}
-            />
-          )}
+          <FormatInfoPopover
+            sourceFormat={trackState.sourceFormat}
+            targetFormat={targetFormatWithMulti}
+            hasAlbumCover={!!trackState.albumCover}
+          />
         </Actions>
       </Cell>
     </Row>
@@ -316,8 +317,8 @@ const EditIcon = ({ onClick }: { onClick: () => void }) => {
 }
 
 const Actions = styled.div`
-  white-space: normal;
+  white-space: nowrap;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
 `

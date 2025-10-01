@@ -115,12 +115,7 @@ export const SingleTrackEditor = ({
             hasAlbumCover={!!trackState.albumCover}
           />
         </PreviewContainer>
-        <Button
-          onClick={onDownload}
-          disabled={
-            trackConverter.isBusy || !trackState.title || !trackState.artist
-          }
-        >
+        <Button onClick={onDownload} disabled={trackConverter.isBusy}>
           {!trackConverter.isBusy && <ExportIcon css={pushRightXs} />}
           {trackConverter.isBusy && <LoadingIcon css={[pushRightXs, spin]} />}
           {trackState.targetFormat === trackState.sourceFormat && <>Save</>}

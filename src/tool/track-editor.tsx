@@ -19,12 +19,13 @@ export const TrackEditor: React.FC<
     useTrackEditorState(fileAndState)
   const multiFormat = useAtomValue(multiFormatAtom)
 
+  const targetFormatWithMulti =
+    isMultiMode(editMode) && trackEditorState.sourceFormat !== 'mp3'
+      ? multiFormat
+      : trackEditorState.targetFormat
   const trackConverter = useTrackConvert({
     uploadedFile: fileAndState.uploadedFile,
-    targetFormat:
-      isMultiMode(editMode) && trackEditorState.sourceFormat !== 'mp3'
-        ? multiFormat
-        : trackEditorState.targetFormat,
+    targetFormat: targetFormatWithMulti,
     sourceFormat: trackEditorState.sourceFormat,
     metadata: {
       title: trackEditorState.cleanTitle,
@@ -87,6 +88,7 @@ export const TrackEditor: React.FC<
       {isMultiMode(editMode) && (
         <MultiTrackEditorRow
           fileAndState={fileAndState}
+          targetFormatWithMulti={targetFormatWithMulti}
           onDownload={handleDownload}
           trackConverter={trackConverter}
         />

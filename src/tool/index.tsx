@@ -397,6 +397,7 @@ const TrackEditors = styled.div<WithEditMode>`
       max-width: 100vw;
       padding: 0 1rem 1rem 1rem;
       overflow-x: auto;
+      overflow-y: visible;
 
       ${mediaQuery.tabletUp`
         padding: 0 2rem 1rem 2rem;

@@ -1,13 +1,17 @@
 import { FC, useMemo } from 'react'
-import InfoIcon from '../../icons/info.svg?react'
+import InfoIconSvg from '../../icons/info.svg?react'
 import { Format } from '../../ffmpeg.tsx'
 import styled from '@emotion/styled'
 
-export const FormatInfo: FC<{
-  sourceFormat: Format
-  targetFormat: Format
+const useHintTexts = ({
+  sourceFormat,
+  targetFormat,
+  hasAlbumCover,
+}: {
+  sourceFormat: 'aiff' | 'wav' | 'flac' | 'mp3'
+  targetFormat: 'aiff' | 'wav' | 'flac' | 'mp3'
   hasAlbumCover: boolean
-}> = ({ sourceFormat, targetFormat, hasAlbumCover }) => {
+}) => {
   const formatInfoHint = useMemo(() => {
     const errors = []
     if (sourceFormat === 'mp3') {
@@ -41,20 +45,46 @@ export const FormatInfo: FC<{
 
     return errors
   }, [hasAlbumCover, sourceFormat, targetFormat])
+  return formatInfoHint
+}
+
+type FormatInfoProps = {
+  sourceFormat: Format
+  targetFormat: Format
+  hasAlbumCover: boolean
+}
+export const FormatInfo: FC<FormatInfoProps> = ({
+  sourceFormat,
+  targetFormat,
+  hasAlbumCover,
+}) => {
+  const formatInfoHints = useHintTexts({
+    sourceFormat,
+    targetFormat,
+    hasAlbumCover,
+  })
 
   return (
     <>
-      {formatInfoHint.length > 0 && (
-        <FormatInfoBubble>
+      {formatInfoHints.length > 0 && (
+        <FormatInfoBox>
           <InfoIcon />
-          <div>{formatInfoHint.join(' ')}</div>
-        </FormatInfoBubble>
+          <FormatInfoText>{formatInfoHints.join(' ')}</FormatInfoText>
+        </FormatInfoBox>
       )}
     </>
   )
 }
 
-const FormatInfoBubble = styled.div`
+const InfoIcon = styled(InfoIconSvg)`
+  margin-top: 0.2rem;
+  fill: var(--color-info);
+  flex-shrink: 0;
+`
+
+const FormatInfoText = styled.div``
+
+const FormatInfoBox = styled.div`
   display: flex;
   gap: 0.5rem;
   border: 1px solid var(--color-border);
@@ -62,10 +92,50 @@ const FormatInfoBubble = styled.div`
   font-size: 0.75rem;
   border-radius: 0.25rem;
   max-width: 21rem;
+`
 
-  svg {
-    margin-top: 0.2rem;
-    fill: var(--color-info);
-    flex-shrink: 0;
+export const FormatInfoPopover: FC<FormatInfoProps> = ({
+  sourceFormat,
+  targetFormat,
+  hasAlbumCover,
+}) => {
+  const formatInfoHints = useHintTexts({
+    sourceFormat,
+    targetFormat,
+    hasAlbumCover,
+  })
+
+  return (
+    <>
+      {formatInfoHints.length > 0 && (
+        <Popover>
+          <InfoIcon />
+          <FormatInfoText>{formatInfoHints.join(' ')}</FormatInfoText>
+        </Popover>
+      )}
+    </>
+  )
+}
+
+const Popover = styled.div`
+  position: relative;
+  ${FormatInfoText} {
+    display: none;
+  }
+
+  ${InfoIcon}:hover + ${FormatInfoText} {
+    display: flex;
+    position: absolute;
+    right: calc(100% + 1rem);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+    padding: 1rem;
+    box-shadow: 0 0 1rem #000000aa;
+    white-space: normal;
+    z-index: 99;
   }
 `
