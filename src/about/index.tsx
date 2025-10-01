@@ -9,7 +9,7 @@ export const About = () => {
       <Banner>
         <BannerContentContainer>
           <BannerContent>
-            <h2>Seamless format conversion & tag management</h2>
+            <h2>Add artist, attach album cover & convert</h2>
             <h1
               css={css`
                 color: var(--color-brand-green);
@@ -17,7 +17,7 @@ export const About = () => {
                 font-size: 2.5rem;
               `}
             >
-              Add artist, attach album cover & convert
+              Seamless format conversion & tag management
             </h1>
             <p
               css={css`
