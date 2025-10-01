@@ -28,7 +28,12 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
       <LicenceContainer>
         <Licence>
           <p>
-            &copy;{' '}
+            <span
+              style={{ display: 'inline-block', transform: 'rotate(180deg)' }}
+              title="Copyleft"
+            >
+              &copy;
+            </span>{' '}
             <a
               href="https://instagram.com/yohan.aif"
               target="_blank"
