@@ -27,16 +27,26 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
       <MainSlot>{children}</MainSlot>
       <LicenceContainer>
         <Licence>
-          <p>&copy; Yohan.Aif / Palmenhq AB {currentYear}</p>
           <p>
-            Trackstyler is provided for free, as-is, without warranties of any
-            kind, under the{' '}
+            &copy;{' '}
             <a
-              href="https://en.wikipedia.org/wiki/MIT_License"
+              href="https://instagram.com/yohan.aif"
               target="_blank"
               rel="noopener"
             >
-              MIT license
+              Yohan.Aif
+            </a>{' '}
+            / Palmenhq AB {currentYear}
+          </p>
+          <p>
+            Trackstyler is provided for free, as-is, without warranties, under
+            the{' '}
+            <a
+              href="https://en.wikipedia.org/wiki/GNU_Affero_General_Public_License"
+              target="_blank"
+              rel="noopener"
+            >
+              AGPL license
             </a>
             .
           </p>

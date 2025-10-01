@@ -174,10 +174,10 @@ const TrackUploader = ({
       <DropzoneInstructions>
         <DropzoneInstructionsLeft>
           <ImportIcon css={[pushRightSm]} />
-          <DropzoneText>Drop a track</DropzoneText>
+          <DropzoneText>Import a track</DropzoneText>
         </DropzoneInstructionsLeft>
         <DropzoneInstructionsRight>
-          <DropzoneTextSm>or click to select an audio file</DropzoneTextSm>
+          <DropzoneTextSm>Drop file or click to select</DropzoneTextSm>
           <DropzoneTextSmMuted>
             <em>Supported formats: .wav, .aiff, .flac, .mp3</em>
           </DropzoneTextSmMuted>
@@ -230,9 +230,9 @@ export const TrackEditView: React.FC<FileUploadActions> = ({
             display: flex;
             flex-direction: row;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
             width: 100%;
-            padding: 1rem 0;
+            padding-top: 1rem;
           `}
         >
           <EditModeSelector
@@ -313,7 +313,11 @@ const EditModeSelector = ({
   editMode: 'multi' | 'single'
   onChange: (mode: EditMode) => void
 }) => (
-  <div>
+  <div
+    css={css`
+      padding-top: 2rem;
+    `}
+  >
     <div
       css={css`
         font-family: var(--font-brand), sans-serif;
@@ -382,7 +386,10 @@ const TrackEditors = styled.div<WithEditMode>`
       display: flex;
       flex-direction: column;
       gap: 2rem;
-      padding-top: 2rem;
+
+      :not(:first-of-type) {
+        padding-top: 2rem;
+      }
     `}
   ${(p) =>
     isMultiMode(p) &&

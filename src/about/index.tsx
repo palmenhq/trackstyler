@@ -9,7 +9,7 @@ export const About = () => {
       <Banner>
         <BannerContentContainer>
           <BannerContent>
-            <h2>First impressions matter</h2>
+            <h2>Seamless format conversion & tag management</h2>
             <h1
               css={css`
                 color: var(--color-brand-green);
@@ -17,15 +17,16 @@ export const About = () => {
                 font-size: 2.5rem;
               `}
             >
-              Style your tracks
+              Add artist, attach album cover & convert
             </h1>
             <p
               css={css`
                 margin: 0;
               `}
             >
-              Make your music stand out. If you share audio files, styling is a
-              must.
+              Free tool to manage audio files - add tags such as artist, record
+              label and album art, and then convert it to any format. It’s free
+              to use, without app download.
             </p>
           </BannerContent>
           <ButtonLink href="/tool">Use Styler tool</ButtonLink>
@@ -35,19 +36,26 @@ export const About = () => {
 
       <MainContainer>
         <Section>
-          <SectionH3>Make your music stand out</SectionH3>
-          <BrandH2>Prep your files for the world</BrandH2>
+          <SectionH3>From any format to any format</SectionH3>
+          <BrandH2>Simple format conversion</BrandH2>
           <p>
-            Let’s face it — most people will judge a track by its cover. As an
-            indie music producer or label, you should give your tracks a fair
-            chance. With Trackstyler, you can give a pro look to the tracks you
-            send - to give your music a fair chance. Your tracks will show up
-            like any other store-bought track in the listener's player.
+            Converting between formats (eg{' '}
+            <em>
+              <strong>.wav</strong> to <strong>.aiff</strong>
+            </em>
+            {', '}
+            or{' '}
+            <em>
+              <strong>.aiff</strong> to <strong>.mp3</strong>
+            </em>
+            ) is now seamless. Simply import your track/s, and export them in a
+            different format. It makes distribution easy, and music library
+            management consistent.
           </p>
         </Section>
 
         <Section>
-          <SectionH3>Player-ready files</SectionH3>
+          <SectionH3>Tracks that look good</SectionH3>
           <BrandH2>
             No more{' '}
             <code
@@ -67,13 +75,9 @@ export const About = () => {
             such as album cover and title - to your audio file.
           </p>
           <p>
-            Regardless if you share download-enabled private Soundcloud links,
-            on free downloads on Hypeddit, or simply email your audio files,
-            your can finally make your tracks stand out.
-          </p>
-          <p>
-            Of course, converting between formats (eg .wav to .aiff or .aiff to
-            .mp3) is seamless!
+            Regardless if you manage your own library, share download-enabled
+            private Soundcloud links, on free downloads on Hypeddit - or simply
+            email audio files - your can make your tracks stand out.
           </p>
         </Section>
 
