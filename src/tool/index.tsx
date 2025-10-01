@@ -1,6 +1,6 @@
 import styled from '@emotion/styled'
 import { css } from '@emotion/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Dropzone,
   DropzoneText,
@@ -56,6 +56,20 @@ const useTrackUpload = () => {
   const [currentFiles, setCurrentFiles] = useAtom(trackUploadsAtom)
   const [invalidFiles, setInvalidFiles] = useState<File[]>([])
   const { probeMetadata } = useProbeMetadata()
+
+  useEffect(() => {
+    if (currentFiles.length === 0) {
+      return
+    }
+
+    const preventUnload = (e: BeforeUnloadEvent) => {
+      if (!confirm('You have made changes. Do want to abandon them?')) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', preventUnload)
+    return () => window.removeEventListener('beforeunload', preventUnload)
+  }, [currentFiles])
 
   const addFile = useCallback(
     async (...files: File[]) => {
@@ -374,11 +388,11 @@ const TrackEditors = styled.div<WithEditMode>`
     isMultiMode(p) &&
     css`
       max-width: 100vw;
-      padding: 0 1rem;
+      padding: 0 1rem 1rem 1rem;
       overflow-x: auto;
 
       ${mediaQuery.tabletUp`
-        padding: 0 2rem;
+        padding: 0 2rem 1rem 2rem;
       `}
     `}
 `
